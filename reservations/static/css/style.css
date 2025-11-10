@@ -1,0 +1,67 @@
+body {
+background-color: #f8f9fa;
+}
+/* room type  */
+.room-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.2s ease;
+}
+.room-card:hover {
+    transform: translateY(-5px);
+}
+.room-card img {
+    height: 220px;
+    object-fit: cover;
+    width: 100%;
+}
+.price {
+    font-weight: bold;
+    color: #007bff;
+}
+.rating {
+    color: #ffc107;
+}
+
+/* add room type  */
+.form-card {
+    max-width: 700px;
+    margin: 50px auto;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+}
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #333;
+}
+.form-label {
+    font-weight: 500;
+}
+
+.hero {
+background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
+            url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1400&q=80')
+            center/cover no-repeat;
+height: 60vh;
+display: flex;
+align-items: center;
+justify-content: center;
+color: white;
+text-align: center;
+}
+.hero h1 {
+font-size: 3rem;
+font-weight: 700;
+}
+.room-card {
+transition: transform 0.2s, box-shadow 0.2s;
+}
+.room-card:hover {
+transform: translateY(-5px);
+box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}

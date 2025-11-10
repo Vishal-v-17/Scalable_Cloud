@@ -1,0 +1,110 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Room Types</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+</head>
+<body>
+
+<div class="container py-5">
+  <h1 class="text-center mb-5">🏨 Our Room Types</h1>
+
+  <div class="row g-4">
+    {% for room_type in room_types %}
+      <div class="col-md-4">
+        <div class="card room-card">
+          <!-- First image as cover -->
+          {% if room_type.images.all %}
+            <img src="{{ room_type.images.all.0.image.url }}" alt="{{ room_type.layout }}">
+          {% else %}
+            <img src="{% static 'images/no_image_available.jpg' %}" alt="No image available">
+          {% endif %}
+
+          <div class="card-body">
+            <h5 class="card-title">{{ room_type.layout }}</h5>
+            <p class="card-text text-muted">{{ room_type.description|truncatechars:100 }}</p>
+
+            <ul class="list-unstyled small">
+              <li><strong>Occupancy:</strong> {{ room_type.occupancy }}</li>
+              <li><strong>Bed Size:</strong> {{ room_type.bed_size }}</li>
+              <li><strong>Wi-Fi:</strong> {% if room_type.wifi %}✅ Free{% else %}❌ Not Available{% endif %}</li>
+              <li><strong>Price:</strong> <span class="price">${{ room_type.price }}</span> / night</li>
+              <li><strong>Rating:</strong> 
+                <span class="rating">⭐ {{ room_type.rating }}</span>
+              </li>
+            </ul>
+
+            <button class="btn btn-outline-primary btn-sm mt-2" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#roomModal{{ room_type.id }}">
+              View Details
+            </button>
+
+            <a href="{% url 'edit_room_type' room_type.id %}" class="btn btn-warning btn-sm mt-2 ms-2">
+                ✏️ Edit
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal for this room type -->
+      <div class="modal fade" id="roomModal{{ room_type.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">{{ room_type.layout }} Details</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <div id="carousel{{ room_type.id }}" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                  {% for image in room_type.images.all %}
+                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                      <img src="{{ image.image.url }}" class="d-block w-100 rounded" alt="Room image">
+                    </div>
+                  {% empty %}
+                    <div class="carousel-item active">
+                      <img src="{% static 'images/no_image_available.jpg' %}" class="d-block w-100 rounded" alt="No image">
+                    </div>
+                  {% endfor %}
+                </div>
+                {% if room_type.images.all|length > 1 %}
+                  <button class="carousel-control-prev" type="button" data-bs-target="#carousel{{ room_type.id }}" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                  </button>
+                  <button class="carousel-control-next" type="button" data-bs-target="#carousel{{ room_type.id }}" data-bs-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                  </button>
+                {% endif %}
+              </div>
+
+              <div class="mt-4">
+                <h6>Description</h6>
+                <p>{{ room_type.description }}</p>
+
+                <ul class="list-unstyled">
+                  <li><strong>Occupancy:</strong> {{ room_type.occupancy }}</li>
+                  <li><strong>Bed Size:</strong> {{ room_type.bed_size }}</li>
+                  <li><strong>Layout:</strong> {{ room_type.layout }}</li>
+                  <li><strong>Wi-Fi:</strong> {% if room_type.wifi %}Yes{% else %}No{% endif %}</li>
+                  <li><strong>Price:</strong> ${{ room_type.price }} / night</li>
+                  <li><strong>Rating:</strong> ⭐ {{ room_type.rating }}</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    {% empty %}
+      <p class="text-center text-muted">No room types available.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
