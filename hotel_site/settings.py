@@ -25,7 +25,7 @@ SECRET_KEY = '3nh7s_#y@$nqh#@1zo235rj94xtbmohbo=59axv2+auscklr&@'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["2501356b16ee4555aec0c36c1efed551.vfs.cloud9.us-east-1.amazonaws.com"]
 
 AUTH_USER_MODEL = 'reservations.User'
 
@@ -120,6 +120,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL = '/media/'
 
