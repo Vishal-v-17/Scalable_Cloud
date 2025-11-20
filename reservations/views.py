@@ -1,42 +1,91 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from .forms import RegistrationForm, BookingForm, RoomTypeForm
-from .models import Room, Booking, Payment, PaymentType, Receptionist, RoomStatus, RoomType, RoomImage
+from .forms import BookingForm, RoomTypeForm
+from .models import Room, Booking, Payment, PaymentType, RoomStatus, RoomType, RoomImage
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 
+from django.conf import settings
+from django.shortcuts import redirect
+from urllib.parse import quote
+import base64
+import requests
+from jose import jwt
+from django.http import HttpResponse
+
 def home(request):
-    rooms = Room.objects.select_related('room_type', 'room_status').all()
-    return render(request, 'reservations/home.html', {'rooms': rooms})
+    email = request.session.get("email")
+    return render(request, "reservations/home.html", {"email": email})
+    
+def login_redirect(request):
+    cognito_url = (
+        f"https://{settings.COGNITO_DOMAIN}/oauth2/authorize?"
+        f"client_id={settings.COGNITO_CLIENT_ID}"
+        f"&response_type=code"
+        f"&scope=email+openid+profile"
+        f"&redirect_uri={settings.COGNITO_REDIRECT_URI}"
+    )
+    return redirect(cognito_url)
 
-def register_view(request):
-    if request.method == 'POST':
-        form = RegistrationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Registration successful. Please log in.")
-            return redirect('login')
-    else:
-        form = RegistrationForm()
-    return render(request, 'reservations/register.html', {'form': form})
 
-def login_view(request):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        pw = request.POST.get('password')
-        user = authenticate(request, username=username, password=pw)
-        if user:
-            login(request, user)
-            return redirect('home')
-        else:
-            messages.error(request, "Invalid credentials")
-    return render(request, 'reservations/login.html')
+def callback(request):
+    code = request.GET.get("code")
+    if not code:
+        return HttpResponse("No code returned", status=400)
+
+    # Token endpoint
+    token_url = f"https://{settings.COGNITO_DOMAIN}/oauth2/token"
+
+    # Client secret in Basic Auth header
+    auth_str = f"{settings.COGNITO_CLIENT_ID}:{settings.COGNITO_CLIENT_SECRET}"
+    b64_auth_str = base64.b64encode(auth_str.encode()).decode()
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": f"Basic {b64_auth_str}"
+    }
+
+    data = {
+        "grant_type": "authorization_code",
+        "code": code,
+        "redirect_uri": settings.COGNITO_REDIRECT_URI
+    }
+
+    resp = requests.post(token_url, data=data, headers=headers)
+    tokens = resp.json()
+
+    if "id_token" not in tokens:
+        return HttpResponse(f"Error fetching tokens: {tokens}", status=400)
+
+    # Here you can decode the JWT to get user info
+    id_token = tokens["id_token"]
+    
+    decoded = jwt.get_unverified_claims(id_token)
+    email = decoded.get("email")
+
+    # OPTIONAL: store in session
+    request.session["id_token"] = id_token
+    request.session["email"] = email
+    
+    request.session.modified = True
+
+    return redirect("home")
 
 def logout_view(request):
-    logout(request)
-    return redirect('home')
+    # Clear Django session completely
+    request.session.flush()
 
+    # Build Cognito logout URL
+    logout_url = (
+        f"https://{settings.COGNITO_DOMAIN}/logout"
+        f"?client_id={settings.COGNITO_CLIENT_ID}"
+        f"&logout_uri={settings.COGNITO_LOGOUT_URL}"
+    )
+
+    # After clearing session/cookies, redirect user to Cognito logout
+    # Cognito will then redirect back to your logout_uri
+    return redirect(logout_url)
+    
 @login_required
 def room_detail(request, room_id):
     room = Room.objects.get(id=room_id)

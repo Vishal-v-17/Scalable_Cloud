@@ -25,7 +25,7 @@ SECRET_KEY = '3nh7s_#y@$nqh#@1zo235rj94xtbmohbo=59axv2+auscklr&@'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["2501356b16ee4555aec0c36c1efed551.vfs.cloud9.us-east-1.amazonaws.com"]
+ALLOWED_HOSTS = ["9f0cf66a769a4582b54ff8264c6011b6.vfs.cloud9.us-east-1.amazonaws.com"]
 
 AUTH_USER_MODEL = 'reservations.User'
 
@@ -124,3 +124,18 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL = '/media/'
 
+
+COGNITO_DOMAIN = "us-east-1vt8cllyxo.auth.us-east-1.amazoncognito.com"
+COGNITO_USER_POOL_ID = "us-east-1_Vt8CLlYxo"
+COGNITO_CLIENT_ID = "5ip7s8epupq8mkft1n2uel68sq"
+COGNITO_CLIENT_SECRET = "1r5gr3o3ut3lubmb7l8inujaqloh382sndppiru4i31klgiuovoc"
+COGNITO_REGION = "us-east-1"  # e.g. "us-east-1"
+
+COGNITO_REDIRECT_URI = "https://9f0cf66a769a4582b54ff8264c6011b6.vfs.cloud9.us-east-1.amazonaws.com/callback/"
+COGNITO_LOGOUT_URL = "https://9f0cf66a769a4582b54ff8264c6011b6.vfs.cloud9.us-east-1.amazonaws.com/"
+
+SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SECURE = False
+
+CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SECURE = False
