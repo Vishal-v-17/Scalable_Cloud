@@ -10,12 +10,17 @@ class BookingForm(forms.ModelForm):
             'check_out': forms.DateInput(attrs={'type': 'date'}),
         }
 
+class RoomForm(forms.Form):
+    occupancy = forms.IntegerField()
+    bed_size = forms.CharField(max_length=100)
+    layout = forms.CharField(max_length=100)
+    wifi = forms.BooleanField(required=False)
+    price = forms.DecimalField(max_digits=10, decimal_places=2)
+    rating = forms.DecimalField(max_digits=10, decimal_places=1)
+    description = forms.CharField(widget=forms.Textarea)
+    
+
 class RoomTypeForm(forms.ModelForm):
-    images = forms.FileField(
-        widget=forms.ClearableFileInput(attrs={'multiple': True}),
-        required=False,
-        label="Upload Room Images"
-    )
     
     class Meta:
         model = RoomType
@@ -29,7 +34,7 @@ class RoomTypeForm(forms.ModelForm):
             'price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter price per night'}),
             'rating': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 5}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Optional description'}),
-            # 'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            # 'images' = forms.FileField(widget=forms.ClearableFileInput()
         }
         labels = {
             'occupancy': 'Occupancy',
