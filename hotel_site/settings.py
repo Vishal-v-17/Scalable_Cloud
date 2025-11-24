@@ -141,7 +141,14 @@ CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SECURE = False
 
 
-#
+#DynamoDB 
 AWS_REGION = "us-east-1"
 AWS_DYNAMODB_TABLE = "Rooms"
 AWS_DYNAMODB_TABLE_1 = "Bookings"
+
+#API GATEWAY
+API_GATEWAY_BOOK_URL = "https://sodvr7qdxj.execute-api.us-east-1.amazonaws.com/prod/bookRoom"
+API_GATEWAY_PAYMENT_URL = "https://jx36upcxz1.execute-api.us-east-1.amazonaws.com/prod/payment"
+
+#SNS
+SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:985835920921:PaymentNotifications"

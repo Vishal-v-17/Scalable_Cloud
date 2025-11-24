@@ -148,9 +148,6 @@ def list_rooms(request):
 
     return render(request, "reservations/list_room_types.html", {"rooms": rooms})
 
-
-API_GATEWAY_BOOK_URL = "https://sodvr7qdxj.execute-api.us-east-1.amazonaws.com/prod/bookRoom"
-
 # def book_room(request, room_id):
 #     if request.method == "POST":
 #         start_date = request.POST.get("start_date")
@@ -209,7 +206,7 @@ def book_room(request, room_id):
             "end_date": end_date,
         }
 
-        response = requests.post(API_GATEWAY_BOOK_URL, json=payload)
+        response = requests.post(settings.API_GATEWAY_BOOK_URL, json=payload)
 
         raw = response.text  # always string
         print("RAW RESPONSE:", raw)
@@ -241,8 +238,6 @@ def book_room(request, room_id):
 
     return render(request, "reservations/book_room.html", {"room_id": room_id})
 
-API_GATEWAY_PAYMENT_URL = "https://jx36upcxz1.execute-api.us-east-1.amazonaws.com/prod/payment"
-
 # def payment(request, booking_id, total_price):
 #     if request.method == "POST":
 #         payload = {"bookingId": booking_id}
@@ -264,8 +259,10 @@ API_GATEWAY_PAYMENT_URL = "https://jx36upcxz1.execute-api.us-east-1.amazonaws.co
 #         "booking_id": booking_id,
 #         "total_price": total_price
 #     })
-    
+ 
 def payment(request, booking_id, total_price):
+    API_GATEWAY_PAYMENT_URL = settings.API_GATEWAY_PAYMENT_URL
+    SNS_TOPIC_ARN = settings.SNS_TOPIC_ARN
     if request.method == "POST":
         payload = {"bookingId": booking_id}
 
@@ -286,6 +283,24 @@ def payment(request, booking_id, total_price):
             inner = json.loads(raw)
 
         status = inner.get("status")
+        
+         # SNS without adding permissions
+        sns = boto3.client("sns", region_name="us-east-1")
+
+        message = (
+            f"Hello {request.user.username},\n\n"
+            f"Your payment was successful!\n"
+            f"Booking ID: {booking_id}\n"
+            f"Total Paid: ${total_price}\n"
+            f"Status: {status}\n\n"
+            f"Thank you for booking with us."
+        )
+
+        sns.publish(
+            TopicArn=SNS_TOPIC_ARN,
+            Subject="Payment Confirmation",
+            Message=message
+        )
 
         return render(request, "reservations/payment_success.html", {"status": status})
 
