@@ -25,7 +25,7 @@ SECRET_KEY = '3nh7s_#y@$nqh#@1zo235rj94xtbmohbo=59axv2+auscklr&@'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["9f0cf66a769a4582b54ff8264c6011b6.vfs.cloud9.us-east-1.amazonaws.com"]
+ALLOWED_HOSTS = ["9f0cf66a769a4582b54ff8264c6011b6.vfs.cloud9.us-east-1.amazonaws.com", "*"]
 
 AUTH_USER_MODEL = 'reservations.User'
 

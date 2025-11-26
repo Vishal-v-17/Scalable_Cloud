@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from .forms import BookingForm, RoomTypeForm
+from .forms import BookingForm, RoomForm
 from .models import Room, Booking, Payment, PaymentType, RoomStatus, RoomType, RoomImage
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
@@ -22,6 +22,8 @@ from .forms import RoomForm
 from decimal import Decimal
 from datetime import datetime
 
+#import roomsearch
+from roomsearch.roomsearch.engine import RoomSearchEngine
 
 def home(request):
     email = request.session.get("email")
@@ -97,12 +99,30 @@ def logout_view(request):
     
 dynamodb = boto3.resource("dynamodb", region_name=settings.AWS_REGION)
 table = dynamodb.Table(settings.AWS_DYNAMODB_TABLE)
+s3 = boto3.client("s3")
 
 def create_room(request):
     if request.method == "POST":
         form = RoomForm(request.POST, request.FILES)
         if form.is_valid():
             room_id = str(uuid.uuid4())
+            
+            image = request.FILES.get("image")
+            
+            image_key = None
+            
+            if image :
+                
+                image_key = f"rooms/{room_id}/{image.name}"
+                
+                # Upload to S3 (IAM role used automatically)
+                s3.upload_fileobj(
+                    image,
+                    settings.AWS_S3_BUCKET_NAME,
+                    image_key,
+                    ExtraArgs={"ContentType": image.content_type}
+                )
+            
             table.put_item(
                 Item={
                     "roomId": room_id,
@@ -110,9 +130,10 @@ def create_room(request):
                     "bed_size": form.cleaned_data["bed_size"],
                     "layout": form.cleaned_data["layout"],
                     "wifi": form.cleaned_data["wifi"],
-                    "price": form.cleaned_data["price"],
-                    "rating": form.cleaned_data["rating"],
+                    "price": str(form.cleaned_data["price"]),
+                    "rating": str(form.cleaned_data["rating"]),
                     "description": form.cleaned_data["description"],
+                    "image_key": image_key,
                 }
             )
 
@@ -133,6 +154,19 @@ def list_rooms(request):
         for key, value in room.items():
             if isinstance(value, Decimal):
                 room[key] = float(value)
+        # Generate pre-signed image URL if image_key exists
+        image_key = room.get("image_key")
+        if image_key:
+            room["image_url"] = s3.generate_presigned_url(
+                "get_object",
+                Params={
+                    "Bucket": settings.AWS_S3_BUCKET_NAME,
+                    "Key": image_key
+                },
+                ExpiresIn=3600  # 1 hour
+            )
+        else:
+            room["image_url"] = None
     
         booking = bookings_table.query(
             IndexName="roomId-index",   # you MUST create this GSI
@@ -147,52 +181,6 @@ def list_rooms(request):
             room["payment_status"] = "AVAILABLE"
 
     return render(request, "reservations/list_room_types.html", {"rooms": rooms})
-
-# def book_room(request, room_id):
-#     if request.method == "POST":
-#         start_date = request.POST.get("start_date")
-#         end_date = request.POST.get("end_date")
-
-#         payload = {
-#             "roomId": room_id,
-#             "start_date": start_date,
-#             "end_date": end_date
-#         }
-
-#         response = requests.post(API_GATEWAY_BOOK_URL, json=payload)
-
-#         raw = response.text  # always string
-#         print("RAW RESPONSE:", raw)
-
-#         try:
-#             outer = response.json()
-#         except:
-#             outer = {}
-
-#         # Determine if "outer" has "body"
-#         if isinstance(outer, dict) and "body" in outer:
-#             # AWS REST API returns {"body": "json-string"}
-#             inner = json.loads(outer["body"])
-#         else:
-#             # Direct body JSON string
-#             inner = json.loads(raw)
-
-#         print("PARSED INNER:", inner)
-
-#         booking_id = inner.get("bookingId")
-#         total_price = inner.get("total_price")
-#         number_of_days = inner.get("number_of_days")
-
-#         return render(request, "payment_page.html", {
-#             "booking_id": booking_id,
-#             "total_price": total_price,
-#             "number_of_days": number_of_days,
-#             "room_id": room_id,
-#             "start_date": start_date,
-#             "end_date": end_date
-#         })
-
-#     return render(request, "reservations/book_room.html", {"room_id": room_id})
     
 def book_room(request, room_id):
     if request.method == "POST":
@@ -237,28 +225,6 @@ def book_room(request, room_id):
         return redirect(f"/payment/{booking_id}/{total_price}")
 
     return render(request, "reservations/book_room.html", {"room_id": room_id})
-
-# def payment(request, booking_id, total_price):
-#     if request.method == "POST":
-#         payload = {"bookingId": booking_id}
-
-#         response = requests.post(API_GATEWAY_PAYMENT_URL, json=payload)
-#         outer = response.json()
-
-#         if "body" in outer:
-#             inner = json.loads(outer["body"])
-#         else:
-#             inner = outer
-
-#         status = inner.get("status")
-#         return render(
-#             request, "reservations/payment_success.html", {"status": status}
-#         )
-
-#     return render(request, "reservations/payment.html", {
-#         "booking_id": booking_id,
-#         "total_price": total_price
-#     })
  
 def payment(request, booking_id, total_price):
     API_GATEWAY_PAYMENT_URL = settings.API_GATEWAY_PAYMENT_URL
@@ -312,6 +278,42 @@ def payment_success(request):
     return render(request, "payment_success.html")
 
 
+def room_search(request):
+    # Search Library API
+    search_engine = RoomSearchEngine()
+
+    filters = {
+        "occupancy": request.GET.get("occupancy", "").strip(),
+        "bed_size": request.GET.get("bed_size", "").strip(),
+        "layout": request.GET.get("layout", "").strip(),
+        "wifi": request.GET.get("wifi", "").strip(),
+        "min_price": request.GET.get("min_price", "").strip(),
+        "max_price": request.GET.get("max_price", "").strip(),
+        "rating": request.GET.get("rating", "").strip(),
+        "keyword": request.GET.get("keyword", "").strip(),
+    }
+
+    #results = search(filters)
+    results = search_engine.search(filters)
+    
+    for room in results:
+        image_key = room.get("image_key")
+        if image_key:
+            room["image_url"] = s3.generate_presigned_url(
+                "get_object",
+                Params={
+                    "Bucket": settings.AWS_S3_BUCKET_NAME,
+                    "Key": image_key
+                },
+                ExpiresIn=3600  # 1 hour
+            )
+        else:
+            room["image_url"] = None
+            
+    return render(request, "reservations/room_search.html", {
+        "results": results,
+        "filters": filters
+    })
 
 
 

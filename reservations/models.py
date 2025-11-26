@@ -8,27 +8,9 @@ class User(AbstractUser):
 
 # RoomType
 class RoomType(models.Model):
-    OCCUPANCY_CHOICES = [
-        ('Single', 'Single'),
-        ('Double', 'Double'),
-        ('Triple', 'Triple'),
-        ('Quad', 'Quad'),
-    ]
-
-    BED_SIZE_CHOICES = [
-        ('King', 'King'),
-        ('Queen', 'Queen'),
-        ('Twin', 'Twin'),
-    ]
-
-    LAYOUT_CHOICES = [
-        ('Standard', 'Standard'),
-        ('Deluxe', 'Deluxe'),
-        ('Suite', 'Suite'),
-    ]
-    occupancy = models.CharField(max_length=10, null=True, blank=True, choices=OCCUPANCY_CHOICES)
-    bed_size = models.CharField(max_length=10, null=True, blank=True, choices=BED_SIZE_CHOICES)
-    layout = models.CharField(max_length=10, null=True, blank=True, choices=LAYOUT_CHOICES)
+    occupancy = models.CharField(max_length=20, blank=True, null=True)
+    bed_size = models.CharField(max_length=20, blank=True, null=True)
+    layout = models.CharField(max_length=20, blank=True, null=True)
     wifi = models.BooleanField(default=True)
     price = models.DecimalField(max_digits=8, decimal_places=2)
     rating = models.PositiveSmallIntegerField(default=3)
@@ -39,6 +21,7 @@ class RoomType(models.Model):
 
     def __str__(self):
         return f"{self.layout} - {self.bed_size} - {self.occupancy}"
+
     
 class RoomImage(models.Model):
     room_type = models.ForeignKey(RoomType, on_delete=models.CASCADE, related_name='images')

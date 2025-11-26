@@ -19,7 +19,7 @@
           <div class="collapse navbar-collapse" id="navbarText">
             <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
               <li class="nav-item">
-                <a class="nav-link" aria-current="page" href="#">Home</a>
+                <a class="nav-link" aria-current="page" href="{% url 'home' %}">Home</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'list_room_types' %}">Rooms</a>
@@ -30,9 +30,99 @@
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'create_room' %}">Add Room</a>
               </li>
-              <form class="d-flex" role="search">
-                <input class="form-control me-2 form-control-sm" type="search" placeholder="Search" aria-label="Search"/>
-                <button class="btn btn-outline-light btn-sm" type="submit">Search</button>
+              <form class="d-flex align-items-center" method="GET" action="{% url 'room_search' %}">
+    
+                  <!-- Search Input -->
+                  <input
+                      class="form-control form-control-sm me-2"
+                      type="search"
+                      name="keyword"
+                      placeholder="Search description..."
+                      aria-label="Search"
+                      value="{{ request.GET.keyword }}"
+                  >
+              
+                  <!-- Dropdown Button -->
+                  <div class="dropdown me-2">
+                      <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                              type="button" 
+                              data-bs-toggle="dropdown" 
+                              aria-expanded="false">
+                          Filters
+                      </button>
+              
+                      <!-- DROPDOWN MENU -->
+                      <div class="dropdown-menu p-3 shadow" style="min-width: 250px;">
+              
+                          <!-- Occupancy -->
+                          <label class="form-label fw-bold mb-1">Occupancy</label>
+                          <select class="form-select form-select-sm mb-3" name="occupancy">
+                              <option value="">Any Occupancy</option>
+                              <option value="Single">Single</option>
+                              <option value="Double">Double</option>
+                              <option value="Triple">Triple</option>
+                              <option value="Quad">Quad</option>
+                          </select>
+              
+                          <!-- Bed Size -->
+                          <label class="form-label fw-bold mb-1">Bed Size</label>
+                          <select class="form-select form-select-sm mb-3" name="bed_size">
+                              <option value="">Any Bed Size</option>
+                              <option value="King">King</option>
+                              <option value="Queen">Queen</option>
+                              <option value="Twin">Twin</option>
+                          </select>
+              
+                          <!-- Layout -->
+                          <label class="form-label fw-bold mb-1">Layout</label>
+                          <select class="form-select form-select-sm mb-3" name="layout">
+                              <option value="">Any Layout</option>
+                              <option value="Standard">Standard</option>
+                              <option value="Deluxe">Deluxe</option>
+                              <option value="Suite">Suite</option>
+                          </select>
+              
+                          <!-- Wifi -->
+                          <label class="form-label fw-bold mb-1">Wifi</label>
+                          <select class="form-select form-select-sm mb-3" name="wifi">
+                              <option value="">Any</option>
+                              <option value="true">Available</option>
+                              <option value="false">Not Available</option>
+                          </select>
+              
+                          <!-- Min / Max Price -->
+                          <div class="row">
+                              <div class="col">
+                                  <label class="form-label fw-bold mb-1">Min Price</label>
+                                  <input type="number" name="min_price" 
+                                         class="form-control form-control-sm mb-3"
+                                         placeholder="0">
+                              </div>
+              
+                              <div class="col">
+                                  <label class="form-label fw-bold mb-1">Max Price</label>
+                                  <input type="number" name="max_price" 
+                                         class="form-control form-control-sm mb-3"
+                                         placeholder="500">
+                              </div>
+                          </div>
+              
+                          <!-- Rating -->
+                          <label class="form-label fw-bold mb-1">Rating</label>
+                          <select name="rating" class="form-select form-select-sm">
+                              <option value="">Any Rating</option>
+                              <option value="1">1+</option>
+                              <option value="2">2+</option>
+                              <option value="3">3+</option>
+                              <option value="4">4+</option>
+                              <option value="5">5</option>
+                          </select>
+              
+                      </div>
+                  </div>
+              
+                  <!-- Submit -->
+                  <button class="btn btn-primary btn-sm" type="submit">Search</button>
               </form>
             </ul>
             <nav class="navbar">

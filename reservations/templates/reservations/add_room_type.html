@@ -5,78 +5,194 @@
   <meta charset="UTF-8">
   <title>Add Room Type</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
 </head>
 <body>
-
-<div class="container">
-  <div class="form-card">
-    <h1>{% if action == "Edit" %}✏️ Edit Room Type{% else %}➕ Add Room Type{% endif %}</h1>
-
-    <form method="POST" enctype="multipart/form-data">
-      {% csrf_token %}
-      <div class="mb-3">
-        <label for="layout" class="form-label">Layout</label>
-        {{ form.layout }}
-      </div>
-
-      <div class="mb-3">
-        <label for="occupancy" class="form-label">Occupancy</label>
-        {{ form.occupancy }}
-      </div>
-
-      <div class="mb-3">
-        <label for="bed_size" class="form-label">Bed Size</label>
-        {{ form.bed_size }}
-      </div>
-
-      <div class="form-check mb-3">
-        {{ form.wifi }}
-        <label class="form-check-label" for="wifi">Free Wi-Fi</label>
-      </div>
-
-      <div class="mb-3">
-        <label for="price" class="form-label">Price (per night)</label>
-        {{ form.price }}
-      </div>
-
-      <div class="mb-3">
-        <label for="rating" class="form-label">Rating</label>
-        {{ form.rating }}
-      </div>
-
-      <div class="mb-3">
-        <label for="description" class="form-label">Description</label>
-        {{ form.description }}
-      </div>
-
-      <!--<div class="mb-3">-->
-      <!--  <label for="images" class="form-label">Upload Images</label>-->
-      <!--  <input type="file" name="images" multiple class="form-control" accept="image/*">-->
-      <!--  <small class="text-muted">You can select one or more images</small>-->
-      <!--</div>-->
-
-      <div class="text-center mt-4">
-        <button type="submit" class="btn btn-primary btn-lg">
-        {% if action == "Edit" %}💾 Save Changes{% else %}Save Room Type{% endif %}
-        </button>
-        <a href="{% url 'list_room_types' %}" class="btn btn-outline-secondary btn-lg ms-2">Cancel</a>
-      </div>
-
-      <div class="text-center mt-4">
-      {% if action == "Edit" and room_type %}
-        <button type="submit" name="action" value="delete" 
-                class="btn btn-danger mb-3"
-                onclick="return confirm('Are you sure you want to delete this room type?');">
-            🗑 Delete Room Type
-        </button>
-        {% endif %}
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand fw-bold" href="{% url 'home' %}">🏨 MyHotel</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarText">
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link" aria-current="page" href="{% url 'home' %}">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'list_room_types' %}">Rooms</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#">Amenities</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'create_room' %}">Add Room</a>
+              </li>
+                            <form class="d-flex align-items-center" method="GET" action="{% url 'room_search' %}">
+    
+                  <!-- Search Input -->
+                  <input
+                      class="form-control form-control-sm me-2"
+                      type="search"
+                      name="keyword"
+                      placeholder="Search description..."
+                      aria-label="Search"
+                      value="{{ request.GET.keyword }}"
+                  >
+              
+                  <!-- Dropdown Button -->
+                  <div class="dropdown me-2">
+                      <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                              type="button" 
+                              data-bs-toggle="dropdown" 
+                              aria-expanded="false">
+                          Filters
+                      </button>
+              
+                      <!-- DROPDOWN MENU -->
+                      <div class="dropdown-menu p-3 shadow" style="min-width: 250px;">
+              
+                          <!-- Occupancy -->
+                          <label class="form-label fw-bold mb-1">Occupancy</label>
+                          <select class="form-select form-select-sm mb-3" name="occupancy">
+                              <option value="">Any Occupancy</option>
+                              <option value="Single">Single</option>
+                              <option value="Double">Double</option>
+                              <option value="Triple">Triple</option>
+                              <option value="Quad">Quad</option>
+                          </select>
+              
+                          <!-- Bed Size -->
+                          <label class="form-label fw-bold mb-1">Bed Size</label>
+                          <select class="form-select form-select-sm mb-3" name="bed_size">
+                              <option value="">Any Bed Size</option>
+                              <option value="King">King</option>
+                              <option value="Queen">Queen</option>
+                              <option value="Twin">Twin</option>
+                          </select>
+              
+                          <!-- Layout -->
+                          <label class="form-label fw-bold mb-1">Layout</label>
+                          <select class="form-select form-select-sm mb-3" name="layout">
+                              <option value="">Any Layout</option>
+                              <option value="Standard">Standard</option>
+                              <option value="Deluxe">Deluxe</option>
+                              <option value="Suite">Suite</option>
+                          </select>
+              
+                          <!-- Wifi -->
+                          <label class="form-label fw-bold mb-1">Wifi</label>
+                          <select class="form-select form-select-sm mb-3" name="wifi">
+                              <option value="">Any</option>
+                              <option value="true">Available</option>
+                              <option value="false">Not Available</option>
+                          </select>
+              
+                          <!-- Min / Max Price -->
+                          <div class="row">
+                              <div class="col">
+                                  <label class="form-label fw-bold mb-1">Min Price</label>
+                                  <input type="number" name="min_price" 
+                                         class="form-control form-control-sm mb-3"
+                                         placeholder="0">
+                              </div>
+              
+                              <div class="col">
+                                  <label class="form-label fw-bold mb-1">Max Price</label>
+                                  <input type="number" name="max_price" 
+                                         class="form-control form-control-sm mb-3"
+                                         placeholder="500">
+                              </div>
+                          </div>
+              
+                          <!-- Rating -->
+                          <label class="form-label fw-bold mb-1">Rating</label>
+                          <select name="rating" class="form-select form-select-sm">
+                              <option value="">Any Rating</option>
+                              <option value="1">1+</option>
+                              <option value="2">2+</option>
+                              <option value="3">3+</option>
+                              <option value="4">4+</option>
+                              <option value="5">5</option>
+                          </select>
+              
+                      </div>
+                  </div>
+              
+                  <!-- Submit -->
+                  <button class="btn btn-primary btn-sm" type="submit">Search</button>
+              </form>
+            </ul>
+            <nav class="navbar">
+              {% if email %}
+                <li class="nav-item me-3 text-light d-flex align-items-center">
+                  Hello, <strong class="ms-1">{{ email }}</strong>
+                </li>
+                <li class="nav-item"><a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">Logout</a></li>
+              {% else %}
+                <li class="nav-item me-2"><a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">Login</a></li>
+              {% endif %}
+              </nav>
+          </div>
         </div>
-
-    </form>
+      </nav>
+      
+  <div class="container mt-5">
+      <div class="card shadow-lg border-0 rounded-4 p-4">
+          <h2 class="mb-4 text-center">Add Room Type</h2>
+  
+          <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+              {% csrf_token %}
+  
+              <div class="row g-3">
+  
+                  <div class="col-md-4">
+                      <label class="form-label fw-semibold">Occupancy</label>
+                      {{ form.occupancy }}
+                  </div>
+  
+                  <div class="col-md-4">
+                      <label class="form-label fw-semibold">Bed Size</label>
+                      {{ form.bed_size }}
+                  </div>
+  
+                  <div class="col-md-4">
+                      <label class="form-label fw-semibold">Layout</label>
+                      {{ form.layout }}
+                  </div>
+  
+                  <div class="col-md-6 mt-3">
+                      <label class="form-label fw-semibold">Price</label>
+                      {{ form.price }}
+                  </div>
+  
+                  <div class="col-md-6 mt-3">
+                      <label class="form-label fw-semibold">Rating</label>
+                      {{ form.rating }}
+                  </div>
+  
+                  <div class="col-md-12 mt-3 form-check">
+                      {{ form.wifi }}
+                      <label class="form-check-label fw-semibold">Wifi Available</label>
+                  </div>
+  
+                  <div class="col-12 mt-3">
+                      <label class="form-label fw-semibold">Description</label>
+                      {{ form.description }}
+                  </div>
+                  <div class="col-12 mt-3">
+                      <label class="form-label fw-semibold">Room Image</label>
+                      {{ form.image }}
+                  </div>
+  
+              </div>
+  
+              <button class="btn btn-primary w-100 py-2 mt-4 rounded-3">
+                  Save Room Type
+              </button>
+          </form>
+      </div>
   </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

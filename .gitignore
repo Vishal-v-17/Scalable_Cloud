@@ -1,0 +1,14 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Django static & compiled files
+staticfiles/
+
+# Local database — DO NOT upload to Git or EB
+db.sqlite3
+
+# Environment folders
+env/
+venv/
+
