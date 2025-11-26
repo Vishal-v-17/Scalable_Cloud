@@ -152,3 +152,6 @@ API_GATEWAY_PAYMENT_URL = "https://jx36upcxz1.execute-api.us-east-1.amazonaws.co
 
 #SNS
 SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:985835920921:PaymentNotifications"
+
+#S3
+AWS_S3_BUCKET_NAME = "room-images-myhotel"
