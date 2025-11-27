@@ -131,8 +131,8 @@ COGNITO_CLIENT_ID = "5ip7s8epupq8mkft1n2uel68sq"
 COGNITO_CLIENT_SECRET = "1r5gr3o3ut3lubmb7l8inujaqloh382sndppiru4i31klgiuovoc"
 COGNITO_REGION = "us-east-1"  # e.g. "us-east-1"
 
-COGNITO_REDIRECT_URI = "https://9f0cf66a769a4582b54ff8264c6011b6.vfs.cloud9.us-east-1.amazonaws.com/callback/"
-COGNITO_LOGOUT_URL = "https://9f0cf66a769a4582b54ff8264c6011b6.vfs.cloud9.us-east-1.amazonaws.com/"
+COGNITO_REDIRECT_URI = "https://hotel-env.eba-3mruzpyy.us-east-1.elasticbeanstalk.com/callback/"
+COGNITO_LOGOUT_URL = "https://hotel-env.eba-3mruzpyy.us-east-1.elasticbeanstalk.com/"
 
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SECURE = False
