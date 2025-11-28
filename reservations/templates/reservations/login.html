@@ -8,23 +8,29 @@
 <body class="bg-light">
 
 <div class="container mt-5">
-  <h2 class="text-center mb-4">Login to Your Account</h2>
+  <h2 class="text-center mb-4">Login</h2>
   <div class="card mx-auto" style="max-width: 400px;">
     <div class="card-body">
       <form method="POST">
         {% csrf_token %}
         <div class="mb-3">
-          <label>Username</label>
-          <input type="text" name="username" class="form-control" required>
+            <label>Email</label>
+            <input type="email" name="email" class="form-control" required>
         </div>
         <div class="mb-3">
-          <label>Password</label>
-          <input type="password" name="password" class="form-control" required>
+            <label>Password</label>
+            <input type="password" name="password" class="form-control" required>
         </div>
         <button class="btn btn-dark w-100" type="submit">Login</button>
       </form>
+
       <div class="text-center mt-3">
-        New here? <a href="{% url 'register' %}">Register</a>
+        New here? <a href="{% url 'signup' %}">SignUp</a>
+      </div>
+      <div class="text-center mt-2">
+        <a href="{% url 'home' %}" class="text-decoration-none">
+          ⬅ Back to Home
+        </a>
       </div>
     </div>
   </div>

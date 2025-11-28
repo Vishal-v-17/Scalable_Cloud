@@ -3,9 +3,11 @@ from . import views
 
 urlpatterns = [
     path('', views.home, name='home'),
-    path('login/', views.login_redirect, name='login'),
-    path('callback/', views.callback, name='callback'),
-    path('logout/', views.logout_view, name='logout'),
+    path('login/', views.login, name='login'),
+    #path('callback/', views.callback, name='callback'),
+    path('logout/', views.logout, name='logout'),
+    path('signup/', views.signup, name='signup'),
+    path('verify/', views.verify, name='verify'),
     path('rooms/list', views.list_rooms, name='list_room_types'),
     path('rooms/create', views.create_room, name='create_room'),
     path("book/<str:room_id>/", views.book_room, name="book_room"),

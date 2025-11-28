@@ -124,15 +124,14 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL = '/media/'
 
-
-COGNITO_DOMAIN = "us-east-1vt8cllyxo.auth.us-east-1.amazoncognito.com"
+#COGNITO_DOMAIN = "us-east-1vt8cllyxo.auth.us-east-1.amazoncognito.com"
 COGNITO_USER_POOL_ID = "us-east-1_Vt8CLlYxo"
 COGNITO_CLIENT_ID = "5ip7s8epupq8mkft1n2uel68sq"
 COGNITO_CLIENT_SECRET = "1r5gr3o3ut3lubmb7l8inujaqloh382sndppiru4i31klgiuovoc"
 COGNITO_REGION = "us-east-1"  # e.g. "us-east-1"
 
-COGNITO_REDIRECT_URI = "https://hotel-env.eba-3mruzpyy.us-east-1.elasticbeanstalk.com/callback/"
-COGNITO_LOGOUT_URL = "https://hotel-env.eba-3mruzpyy.us-east-1.elasticbeanstalk.com/"
+# COGNITO_REDIRECT_URI = "https://hotel-env.eba-3mruzpyy.us-east-1.elasticbeanstalk.com/callback/"
+# COGNITO_LOGOUT_URL = "https://hotel-env.eba-3mruzpyy.us-east-1.elasticbeanstalk.com/"
 
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SECURE = False

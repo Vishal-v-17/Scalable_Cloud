@@ -6,6 +6,10 @@ from .models import Room, Booking, Payment, PaymentType, RoomStatus, RoomType, R
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 
+#cognito
+import hmac
+import hashlib
+
 from django.conf import settings
 from django.shortcuts import redirect
 from urllib.parse import quote
@@ -28,74 +32,182 @@ from roomsearch.roomsearch.engine import RoomSearchEngine
 def home(request):
     email = request.session.get("email")
     return render(request, "reservations/home.html", {"email": email})
-    
-def login_redirect(request):
-    cognito_url = (
-        f"https://{settings.COGNITO_DOMAIN}/oauth2/authorize?"
-        f"client_id={settings.COGNITO_CLIENT_ID}"
-        f"&response_type=code"
-        f"&scope=email+openid+profile"
-        f"&redirect_uri={settings.COGNITO_REDIRECT_URI}"
-    )
-    return redirect(cognito_url)
+
+client = boto3.client("cognito-idp", region_name=settings.COGNITO_REGION)
+
+# -----------------------------
+# USER LOGIN (username + password)
+# -----------------------------
+def login(request):
+    if request.method == "POST":
+        email = request.POST.get("email")
+        password = request.POST.get("password")
+
+        try:
+            resp = client.initiate_auth(
+                AuthFlow="USER_PASSWORD_AUTH",
+                AuthParameters={
+                    "USERNAME": email,
+                    "PASSWORD": password,
+                    "SECRET_HASH": get_secret_hash(email),
+                },
+                ClientId=settings.COGNITO_CLIENT_ID
+            )
+
+            result = resp["AuthenticationResult"]
+
+            request.session["id_token"] = result["IdToken"]
+            request.session["access_token"] = result["AccessToken"]
+            request.session["email"] = email
+
+            return redirect("home")
+
+        except client.exceptions.NotAuthorizedException:
+            return HttpResponse("Invalid username or password")
+        except Exception as e:
+            return HttpResponse(str(e))
+
+    return render(request, "reservations/login.html")
 
 
-def callback(request):
-    code = request.GET.get("code")
-    if not code:
-        return HttpResponse("No code returned", status=400)
-
-    # Token endpoint
-    token_url = f"https://{settings.COGNITO_DOMAIN}/oauth2/token"
-
-    # Client secret in Basic Auth header
-    auth_str = f"{settings.COGNITO_CLIENT_ID}:{settings.COGNITO_CLIENT_SECRET}"
-    b64_auth_str = base64.b64encode(auth_str.encode()).decode()
-    headers = {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": f"Basic {b64_auth_str}"
-    }
-
-    data = {
-        "grant_type": "authorization_code",
-        "code": code,
-        "redirect_uri": settings.COGNITO_REDIRECT_URI
-    }
-
-    resp = requests.post(token_url, data=data, headers=headers)
-    tokens = resp.json()
-
-    if "id_token" not in tokens:
-        return HttpResponse(f"Error fetching tokens: {tokens}", status=400)
-
-    # Here you can decode the JWT to get user info
-    id_token = tokens["id_token"]
-    
-    decoded = jwt.get_unverified_claims(id_token)
-    email = decoded.get("email")
-
-    # OPTIONAL: store in session
-    request.session["id_token"] = id_token
-    request.session["email"] = email
-    
-    request.session.modified = True
-
+# -----------------------------
+# LOGOUT
+# -----------------------------
+def logout(request):
+    request.session.flush()
     return redirect("home")
 
-def logout_view(request):
-    # Clear Django session completely
-    request.session.flush()
 
-    # Build Cognito logout URL
-    logout_url = (
-        f"https://{settings.COGNITO_DOMAIN}/logout"
-        f"?client_id={settings.COGNITO_CLIENT_ID}"
-        f"&logout_uri={settings.COGNITO_LOGOUT_URL}"
-    )
+# -----------------------------
+# SIGNUP
+# -----------------------------
+def get_secret_hash(username):
+    message = username + settings.COGNITO_CLIENT_ID
+    dig = hmac.new(
+        settings.COGNITO_CLIENT_SECRET.encode("utf-8"),
+        msg=message.encode("utf-8"),
+        digestmod=hashlib.sha256
+    ).digest()
+    return base64.b64encode(dig).decode()
 
-    # After clearing session/cookies, redirect user to Cognito logout
-    # Cognito will then redirect back to your logout_uri
-    return redirect(logout_url)
+def signup(request):
+    if request.method == "POST":
+        email = request.POST.get("email")
+        password = request.POST.get("password")
+
+        try:
+            client.sign_up(
+                ClientId=settings.COGNITO_CLIENT_ID,
+                SecretHash=get_secret_hash(email),
+                Username=email,
+                Password=password,
+                UserAttributes=[
+                    {"Name": "email", "Value": email}
+                ]
+            )
+            request.session["pending_email"] = email
+            return redirect("verify")
+            
+        except Exception as e:
+            return HttpResponse(str(e))
+
+    return render(request, "reservations/signup.html")
+
+def verify(request):
+    email = request.session.get("pending_email")
+
+    if not email:
+        return HttpResponse("No pending email found in session.", status=400)
+        
+    if request.method == "POST":
+        code = request.POST.get("code")
+
+        if not code:
+            return HttpResponse("Verification code is required.", status=400)
+
+        try:
+            client.confirm_sign_up(
+                ClientId=settings.COGNITO_CLIENT_ID,
+                Username=email,
+                ConfirmationCode=code,
+                SecretHash=get_secret_hash(email)
+            )
+            del request.session["pending_email"]
+            return redirect("login")
+            
+        except Exception as e:
+            return HttpResponse(str(e), status=400)
+            
+    return render(request, "reservations/verify.html")
+
+    
+# def login_redirect(request):
+#     cognito_url = (
+#         f"https://{settings.COGNITO_DOMAIN}/oauth2/authorize?"
+#         f"client_id={settings.COGNITO_CLIENT_ID}"
+#         f"&response_type=code"
+#         f"&scope=email+openid+profile"
+#         f"&redirect_uri={settings.COGNITO_REDIRECT_URI}"
+#     )
+#     return redirect(cognito_url)
+
+
+# def callback(request):
+#     code = request.GET.get("code")
+#     if not code:
+#         return HttpResponse("No code returned", status=400)
+
+#     # Token endpoint
+#     token_url = f"https://{settings.COGNITO_DOMAIN}/oauth2/token"
+
+#     # Client secret in Basic Auth header
+#     auth_str = f"{settings.COGNITO_CLIENT_ID}:{settings.COGNITO_CLIENT_SECRET}"
+#     b64_auth_str = base64.b64encode(auth_str.encode()).decode()
+#     headers = {
+#         "Content-Type": "application/x-www-form-urlencoded",
+#         "Authorization": f"Basic {b64_auth_str}"
+#     }
+
+#     data = {
+#         "grant_type": "authorization_code",
+#         "code": code,
+#         "redirect_uri": settings.COGNITO_REDIRECT_URI
+#     }
+
+#     resp = requests.post(token_url, data=data, headers=headers)
+#     tokens = resp.json()
+
+#     if "id_token" not in tokens:
+#         return HttpResponse(f"Error fetching tokens: {tokens}", status=400)
+
+#     # Here you can decode the JWT to get user info
+#     id_token = tokens["id_token"]
+    
+#     decoded = jwt.get_unverified_claims(id_token)
+#     email = decoded.get("email")
+
+#     # OPTIONAL: store in session
+#     request.session["id_token"] = id_token
+#     request.session["email"] = email
+    
+#     request.session.modified = True
+
+#     return redirect("home")
+
+# def logout_view(request):
+#     # Clear Django session completely
+#     request.session.flush()
+
+#     # Build Cognito logout URL
+#     logout_url = (
+#         f"https://{settings.COGNITO_DOMAIN}/logout"
+#         f"?client_id={settings.COGNITO_CLIENT_ID}"
+#         f"&logout_uri={settings.COGNITO_LOGOUT_URL}"
+#     )
+
+#     # After clearing session/cookies, redirect user to Cognito logout
+#     # Cognito will then redirect back to your logout_uri
+#     return redirect(logout_url)
     
 dynamodb = boto3.resource("dynamodb", region_name=settings.AWS_REGION)
 table = dynamodb.Table(settings.AWS_DYNAMODB_TABLE)
