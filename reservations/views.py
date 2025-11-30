@@ -34,6 +34,10 @@ def home(request):
     email = request.session.get("email")
     return render(request, "reservations/home.html", {"email": email})
 
+def amenities_page(request):
+    email = request.session.get("email")
+    return render(request, 'reservations/amenities.html', {"email": email})
+
 def login(request):
     if request.method == "POST":
         email = request.POST.get("email")
@@ -182,21 +186,20 @@ def create_room(request):
     else:
         form = RoomForm()
 
-    return render(request, "reservations/add_room_type.html", {"form": form})
+    return render(request, "reservations/add_room_type.html", {"form": form, "email": email})
     
 bookings_table = dynamodb.Table(settings.AWS_DYNAMODB_TABLE_1)
 
 def list_rooms(request):
     email = request.session.get("email")
-    response = table.scan()  # get all rows
+    response = table.scan()  
     rooms = response.get("Items", [])
 
-    # Convert Decimal to float for template
     for room in rooms:
         for key, value in room.items():
             if isinstance(value, Decimal):
                 room[key] = float(value)
-        # Generate pre-signed image URL if image_key exists
+        
         image_key = room.get("image_key")
         if image_key:
             room["image_url"] = s3.generate_presigned_url(
@@ -205,13 +208,13 @@ def list_rooms(request):
                     "Bucket": settings.AWS_S3_BUCKET_NAME,
                     "Key": image_key
                 },
-                ExpiresIn=3600  # 1 hour
+                ExpiresIn=3600  
             )
         else:
             room["image_url"] = None
     
         booking = bookings_table.query(
-            IndexName="roomId-index",   # you MUST create this GSI
+            IndexName="roomId-index",   \
             KeyConditionExpression=boto3.dynamodb.conditions.Key('roomId').eq(room["roomId"]),
             ScanIndexForward=False,
             Limit=1
@@ -224,7 +227,8 @@ def list_rooms(request):
 
     return render(request, "reservations/list_room_types.html", {"rooms": rooms, "email": email})
     
-#@unauthenticated_user
+lambda_client = boto3.client("lambda", region_name=settings.AWS_REGION)
+
 @unauthenticated_user
 def book_room(request, room_id):
     email = request.session.get("email")
@@ -239,22 +243,17 @@ def book_room(request, room_id):
             "end_date": end_date,
         }
 
-        response = requests.post(settings.API_GATEWAY_BOOK_URL, json=payload)
+        # --- Call Lambda directly ---
+        response = lambda_client.invoke(
+            FunctionName=settings.LAMBDA_BOOK_ROOM,  # add in settings
+            InvocationType="RequestResponse",
+            Payload=json.dumps(payload),
+        )
 
-        raw = response.text 
+        raw = response["Payload"].read()
+        outer = json.loads(raw)
 
-        try:
-            outer = response.json()
-        except:
-            outer = {}
-
-        # Determine if "outer" has "body"
-        if isinstance(outer, dict) and "body" in outer:
-            # AWS REST API returns {"body": "json-string"}
-            inner = json.loads(outer["body"])
-        else:
-            # Direct body JSON string
-            inner = json.loads(raw)
+        inner = json.loads(outer["body"])
 
         booking_id = inner.get("bookingId")
         total_price = inner.get("total_price")
@@ -263,34 +262,25 @@ def book_room(request, room_id):
         if not booking_id:
             return HttpResponse("Booking failed: " + str(inner))
 
-        # Redirect to dummy payment page
         return redirect(f"/payment/{booking_id}/{total_price}")
 
     return render(request, "reservations/book_room.html", {"room_id": room_id, "email": email})
+
+SNS_TOPIC_ARN = settings.SNS_TOPIC_ARN
     
-#@unauthenticated_user
 @unauthenticated_user
 def payment(request, booking_id, total_price):
     email = request.session.get("email")
-    API_GATEWAY_PAYMENT_URL = settings.API_GATEWAY_PAYMENT_URL
-    SNS_TOPIC_ARN = settings.SNS_TOPIC_ARN
     if request.method == "POST":
         payload = {"bookingId": booking_id}
 
-        response = requests.post(API_GATEWAY_PAYMENT_URL, json=payload)
+        response = lambda_client.invoke(
+            FunctionName=settings.LAMBDA_PAYMENT,
+            InvocationType="RequestResponse",
+            Payload=json.dumps(payload),
+        )
 
-        raw = response.text
-
-        try:
-            outer = response.json()
-        except:
-            outer = {}
-
-        # Parse inner "body"
-        if isinstance(outer, dict) and "body" in outer:
-            inner = json.loads(outer["body"])
-        else:
-            inner = json.loads(raw)
+        inner = json.loads(response["Payload"].read())
 
         status = inner.get("status")
 
@@ -313,7 +303,6 @@ def payment(request, booking_id, total_price):
     return render(request, "reservations/payment.html", {"booking_id": booking_id, "total_price": total_price, "email": email})
 
 
-#@unauthenticated_user
 @unauthenticated_user
 def payment_success(request):
     email = request.session.get("email")

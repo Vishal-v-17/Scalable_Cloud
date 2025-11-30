@@ -25,7 +25,7 @@
                 <a class="nav-link" href="{% url 'list_room_types' %}">Rooms</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="#">Amenities</a>
+                <a class="nav-link" href="{% url 'amenities' %}">Amenities</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'create_room' %}">Add Room</a>
@@ -128,13 +128,63 @@
       </nav>
 
       <!-- Hero Section -->
-      <section class="hero">
-        <div class="container">
-          <h1>Find Your Perfect Stay</h1>
-          <p class="lead mt-3">Book comfortable rooms at the best prices</p>
-          <a href="#rooms" class="btn btn-primary btn-lg mt-3">Explore Rooms</a>
+<section class="hero">
+  <div class="container">
+    <h1 style="color:#dcdcdc; font-size:3rem; font-weight:800;">Find Your Perfect Stay</h1>
+    <p class="lead mt-3">Book comfortable rooms at the best prices</p>
+
+    <!-- Extra Hero Content -->
+    <div class="d-flex justify-content-center gap-4 mt-4 flex-wrap">
+      <div class="text-center text-light">
+        <h5 class="fw-bold mb-1">🌟 Luxury Rooms</h5>
+        <p class="small mb-0">Experience comfort & elegance</p>
+      </div>
+      <div class="text-center text-light">
+        <h5 class="fw-bold mb-1">💰 Best Rates</h5>
+        <p class="small mb-0">Lowest price guaranteed</p>
+      </div>
+      <div class="text-center text-light">
+        <h5 class="fw-bold mb-1">🛎 24/7 Support</h5>
+        <p class="small mb-0">We’re here anytime you need</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+<!-- Why Choose Us Section -->
+<section class="py-5 bg-light" id="why-us">
+  <div class="container text-center">
+    <h2 class="fw-bold mb-4">Why Choose Our Hotel?</h2>
+    <p class="text-muted mb-5">
+      We offer the best hospitality experience tailored to your comfort.
+    </p>
+
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="p-4 bg-white shadow-sm rounded-4 h-100">
+          <h3 class="fs-4 mb-2">🏨 Modern Rooms</h3>
+          <p class="text-muted">Experience stylish, well-designed rooms equipped for your comfort.</p>
         </div>
-      </section>
+      </div>
+
+      <div class="col-md-4">
+        <div class="p-4 bg-white shadow-sm rounded-4 h-100">
+          <h3 class="fs-4 mb-2">💰 Affordable Prices</h3>
+          <p class="text-muted">Enjoy premium rooms without breaking your budget.</p>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="p-4 bg-white shadow-sm rounded-4 h-100">
+          <h3 class="fs-4 mb-2">🌍 Great Locations</h3>
+          <p class="text-muted">Stay close to the city’s best attractions and transportation.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
 
       <!-- Footer -->
       <footer class="bg-dark text-light text-center py-3">
