@@ -2,7 +2,6 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .forms import BookingForm, RoomForm
 from .models import Room, Booking, Payment, RoomStatus, RoomType
-#from django.contrib.auth.decorators import login_required
 from .decorators import cognito_email_allowed, unauthenticated_user
 
 #cognito
@@ -242,8 +241,7 @@ def book_room(request, room_id):
 
         response = requests.post(settings.API_GATEWAY_BOOK_URL, json=payload)
 
-        raw = response.text  # always string
-        print("RAW RESPONSE:", raw)
+        raw = response.text 
 
         try:
             outer = response.json()
@@ -257,8 +255,6 @@ def book_room(request, room_id):
         else:
             # Direct body JSON string
             inner = json.loads(raw)
-
-        print("PARSED INNER:", inner)
 
         booking_id = inner.get("bookingId")
         total_price = inner.get("total_price")
