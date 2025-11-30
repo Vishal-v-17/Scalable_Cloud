@@ -4,7 +4,6 @@ from . import views
 urlpatterns = [
     path('', views.home, name='home'),
     path('login/', views.login, name='login'),
-    #path('callback/', views.callback, name='callback'),
     path('logout/', views.logout, name='logout'),
     path('signup/', views.signup, name='signup'),
     path('verify/', views.verify, name='verify'),
@@ -14,11 +13,4 @@ urlpatterns = [
     path("payment/<str:booking_id>/<int:total_price>/", views.payment, name="payment"),
     path("payment/success/", views.payment_success, name="payment_success"),
     path("rooms/search/", views.room_search, name="room_search"),
-
-
-    # path('rooms/<uuid:pk>/', views.room_detail, name='room_detail'),
-    # path('rooms/<uuid:pk>/book/', views.book_room, name='book_room'),
-    # path('booking/<uuid:pk>/', views.booking_detail, name='booking_detail'),
-    # path('booking/<uuid:booking_id>/pay/', views.pay_booking, name='pay_booking'),
-    # path('room-types/<uuid:room_type_id>/edit/', views.add_room_type, name='edit_room_type'),
 ]

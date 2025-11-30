@@ -1,10 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from .forms import BookingForm, RoomForm
-from .models import Room, Booking, Payment, PaymentType, RoomStatus, RoomType, RoomImage
-from django.contrib.auth.decorators import login_required
-from django.utils import timezone
+from .models import Room, Booking, Payment, RoomStatus, RoomType
+#from django.contrib.auth.decorators import login_required
+from .decorators import cognito_email_allowed, unauthenticated_user
 
 #cognito
 import hmac
@@ -26,18 +25,16 @@ from .forms import RoomForm
 from decimal import Decimal
 from datetime import datetime
 
-#import roomsearch
-from roomsearch.roomsearch.engine import RoomSearchEngine
+#Library API
+import roomsearch
+
+client = boto3.client("cognito-idp", region_name=settings.COGNITO_REGION)
+sns = boto3.client("sns", region_name="us-east-1")
 
 def home(request):
     email = request.session.get("email")
     return render(request, "reservations/home.html", {"email": email})
 
-client = boto3.client("cognito-idp", region_name=settings.COGNITO_REGION)
-
-# -----------------------------
-# USER LOGIN (username + password)
-# -----------------------------
 def login(request):
     if request.method == "POST":
         email = request.POST.get("email")
@@ -69,18 +66,10 @@ def login(request):
 
     return render(request, "reservations/login.html")
 
-
-# -----------------------------
-# LOGOUT
-# -----------------------------
 def logout(request):
     request.session.flush()
     return redirect("home")
 
-
-# -----------------------------
-# SIGNUP
-# -----------------------------
 def get_secret_hash(username):
     message = username + settings.COGNITO_CLIENT_ID
     dig = hmac.new(
@@ -105,6 +94,14 @@ def signup(request):
                     {"Name": "email", "Value": email}
                 ]
             )
+            
+            # Subscribe user to SNS topic
+            sns.subscribe(
+                TopicArn=settings.SNS_TOPIC_ARN,
+                Protocol="email",
+                Endpoint=email
+            )
+            
             request.session["pending_email"] = email
             return redirect("verify")
             
@@ -140,80 +137,13 @@ def verify(request):
             
     return render(request, "reservations/verify.html")
 
-    
-# def login_redirect(request):
-#     cognito_url = (
-#         f"https://{settings.COGNITO_DOMAIN}/oauth2/authorize?"
-#         f"client_id={settings.COGNITO_CLIENT_ID}"
-#         f"&response_type=code"
-#         f"&scope=email+openid+profile"
-#         f"&redirect_uri={settings.COGNITO_REDIRECT_URI}"
-#     )
-#     return redirect(cognito_url)
-
-
-# def callback(request):
-#     code = request.GET.get("code")
-#     if not code:
-#         return HttpResponse("No code returned", status=400)
-
-#     # Token endpoint
-#     token_url = f"https://{settings.COGNITO_DOMAIN}/oauth2/token"
-
-#     # Client secret in Basic Auth header
-#     auth_str = f"{settings.COGNITO_CLIENT_ID}:{settings.COGNITO_CLIENT_SECRET}"
-#     b64_auth_str = base64.b64encode(auth_str.encode()).decode()
-#     headers = {
-#         "Content-Type": "application/x-www-form-urlencoded",
-#         "Authorization": f"Basic {b64_auth_str}"
-#     }
-
-#     data = {
-#         "grant_type": "authorization_code",
-#         "code": code,
-#         "redirect_uri": settings.COGNITO_REDIRECT_URI
-#     }
-
-#     resp = requests.post(token_url, data=data, headers=headers)
-#     tokens = resp.json()
-
-#     if "id_token" not in tokens:
-#         return HttpResponse(f"Error fetching tokens: {tokens}", status=400)
-
-#     # Here you can decode the JWT to get user info
-#     id_token = tokens["id_token"]
-    
-#     decoded = jwt.get_unverified_claims(id_token)
-#     email = decoded.get("email")
-
-#     # OPTIONAL: store in session
-#     request.session["id_token"] = id_token
-#     request.session["email"] = email
-    
-#     request.session.modified = True
-
-#     return redirect("home")
-
-# def logout_view(request):
-#     # Clear Django session completely
-#     request.session.flush()
-
-#     # Build Cognito logout URL
-#     logout_url = (
-#         f"https://{settings.COGNITO_DOMAIN}/logout"
-#         f"?client_id={settings.COGNITO_CLIENT_ID}"
-#         f"&logout_uri={settings.COGNITO_LOGOUT_URL}"
-#     )
-
-#     # After clearing session/cookies, redirect user to Cognito logout
-#     # Cognito will then redirect back to your logout_uri
-#     return redirect(logout_url)
-    
 dynamodb = boto3.resource("dynamodb", region_name=settings.AWS_REGION)
 table = dynamodb.Table(settings.AWS_DYNAMODB_TABLE)
 s3 = boto3.client("s3")
 
+@cognito_email_allowed(['vishalv1705@gmail.com'])
 def create_room(request):
+    email = request.session.get("email")
     if request.method == "POST":
         form = RoomForm(request.POST, request.FILES)
         if form.is_valid():
@@ -249,7 +179,7 @@ def create_room(request):
                 }
             )
 
-            return render(request, "reservations/home.html", {"room_id": room_id})
+            return render(request, "reservations/home.html", {"room_id": room_id, "email": email})
     else:
         form = RoomForm()
 
@@ -258,6 +188,7 @@ def create_room(request):
 bookings_table = dynamodb.Table(settings.AWS_DYNAMODB_TABLE_1)
 
 def list_rooms(request):
+    email = request.session.get("email")
     response = table.scan()  # get all rows
     rooms = response.get("Items", [])
 
@@ -292,9 +223,12 @@ def list_rooms(request):
         else:
             room["payment_status"] = "AVAILABLE"
 
-    return render(request, "reservations/list_room_types.html", {"rooms": rooms})
+    return render(request, "reservations/list_room_types.html", {"rooms": rooms, "email": email})
     
+#@unauthenticated_user
+@unauthenticated_user
 def book_room(request, room_id):
+    email = request.session.get("email")
     if request.method == "POST":
 
         start_date = request.POST["start_date"]
@@ -336,9 +270,12 @@ def book_room(request, room_id):
         # Redirect to dummy payment page
         return redirect(f"/payment/{booking_id}/{total_price}")
 
-    return render(request, "reservations/book_room.html", {"room_id": room_id})
- 
+    return render(request, "reservations/book_room.html", {"room_id": room_id, "email": email})
+    
+#@unauthenticated_user
+@unauthenticated_user
 def payment(request, booking_id, total_price):
+    email = request.session.get("email")
     API_GATEWAY_PAYMENT_URL = settings.API_GATEWAY_PAYMENT_URL
     SNS_TOPIC_ARN = settings.SNS_TOPIC_ARN
     if request.method == "POST":
@@ -347,7 +284,6 @@ def payment(request, booking_id, total_price):
         response = requests.post(API_GATEWAY_PAYMENT_URL, json=payload)
 
         raw = response.text
-        print("RAW PAYMENT RESPONSE:", raw)
 
         try:
             outer = response.json()
@@ -361,12 +297,8 @@ def payment(request, booking_id, total_price):
             inner = json.loads(raw)
 
         status = inner.get("status")
-        
-         # SNS without adding permissions
-        sns = boto3.client("sns", region_name="us-east-1")
 
         message = (
-            f"Hello {request.user.username},\n\n"
             f"Your payment was successful!\n"
             f"Booking ID: {booking_id}\n"
             f"Total Paid: ${total_price}\n"
@@ -380,19 +312,21 @@ def payment(request, booking_id, total_price):
             Message=message
         )
 
-        return render(request, "reservations/payment_success.html", {"status": status})
+        return render(request, "reservations/payment_success.html", {"booking_id": booking_id, "total_price": total_price, "status": status})
 
-    return render(request, "reservations/payment.html", {"booking_id": booking_id, "total_price": total_price})
+    return render(request, "reservations/payment.html", {"booking_id": booking_id, "total_price": total_price, "email": email})
 
 
-
+#@unauthenticated_user
+@unauthenticated_user
 def payment_success(request):
-    return render(request, "payment_success.html")
+    email = request.session.get("email")
+    return render(request, "payment_success.html", {"email": email})
 
 
 def room_search(request):
-    # Search Library API
-    search_engine = RoomSearchEngine()
+    email = request.session.get("email")
+    search_engine = roomsearch.RoomSearchEngine()
 
     filters = {
         "occupancy": request.GET.get("occupancy", "").strip(),
@@ -405,7 +339,6 @@ def room_search(request):
         "keyword": request.GET.get("keyword", "").strip(),
     }
 
-    #results = search(filters)
     results = search_engine.search(filters)
     
     for room in results:
@@ -422,140 +355,4 @@ def room_search(request):
         else:
             room["image_url"] = None
             
-    return render(request, "reservations/room_search.html", {
-        "results": results,
-        "filters": filters
-    })
-
-
-
-
-
-
-
-# @login_required
-# def room_detail(request, room_id):
-#     room = Room.objects.get(id=room_id)
-#     return render(request, 'reservations/room_detail.html', {'room': room})
-
-# # @login_required
-# # def book_room(request, user_id):
-# #     room = get_object_or_404(Room, pk=pk)
-# #     # simple check: must be 'available' status to book
-# #     if room.room_status.status.lower() != 'available':
-# #         messages.error(request, "Room not available")
-# #         return redirect('room_detail', pk=pk)
-
-# #     if request.method == 'POST':
-# #         form = BookingForm(request.POST)
-# #         if form.is_valid():
-# #             booking = form.save(commit=False)
-# #             booking.customer = request.user
-# #             # assign a staff (first receptionist) - in real app pick by availability
-# #             receptionist = Receptionist.objects.first()
-# #             booking.staff = receptionist
-# #             booking.payment = None  # payment created after confirmation
-# #             booking.save()
-# #             messages.success(request, f'Booking created: {booking.id}')
-# #             return redirect('booking_detail', pk=booking.id)
-# #     else:
-# #         form = BookingForm(initial={'room': room})
-# #     return render(request, 'reservations/book_room.html', {'form': form, 'room': room})
-
-# @login_required
-# def booking_detail(request, pk):
-#     booking = get_object_or_404(Booking, pk=pk, customer=request.user)
-#     return render(request, 'reservations/booking_detail.html', {'booking': booking})
-
-# # Payment stub: create payment record (no external gateway)
-# @login_required
-# def pay_booking(request, booking_id):
-#     booking = get_object_or_404(Booking, pk=booking_id, customer=request.user)
-#     if request.method == 'POST':
-#         # pick default payment type or create one
-#         ptype, _ = PaymentType.objects.get_or_create(name='Card')
-#         receptionist = booking.staff
-#         amount = booking.room.price
-#         payment = Payment.objects.create(payment_type=ptype, customer=request.user, staff=receptionist, amount=amount)
-#         booking.payment = payment
-#         booking.save()
-#         # update room status to 'booked'
-#         booked_status, _ = RoomStatus.objects.get_or_create(status='Booked')
-#         booking.room.room_status = booked_status
-#         booking.room.save()
-#         messages.success(request, 'Payment successful and booking confirmed.')
-#         return redirect('booking_detail', pk=booking.id)
-#     return render(request, 'reservations/pay_booking.html', {'booking': booking})
-
-# @login_required
-# def add_room_type(request, room_type_id=None):
-#     """Allow staff or admin to create a new room type"""
-#     if room_type_id:
-#         room_type = get_object_or_404(RoomType, id=room_type_id)
-#         action = "Edit"
-#     else:
-#         room_type = None
-#         action = "Add"
-        
-#     if request.method == 'POST':
-#         # Delete the entire room type
-#         if request.POST.get('action') == 'delete' and room_type:
-#             print(request.POST.dict())
-#             room_type.delete()
-#             messages.success(request, "Room type deleted successfully.")
-#             return redirect('list_room_types')
-
-#         # Delete a single image
-#         delete_image_id = request.POST.get('delete_image_id')
-#         if delete_image_id:
-#             image = get_object_or_404(RoomImage, id=delete_image_id)
-#             image.delete()
-#             messages.success(request, "Image deleted successfully.")
-#             return redirect('edit_room_type', room_type_id=room_type.id)
-        
-#         # Add/Edit room type
-#         form = RoomTypeForm(request.POST, instance=room_type)
-#         if form.is_valid():
-#             room_type = form.save()
-#             images = request.FILES.getlist('images')
-#             for image in images:
-#                 RoomImage.objects.create(room_type=room_type, image=image)
-#             return redirect('list_room_types')
-#     else:
-#         form = RoomTypeForm(instance=room_type)
-    
-#     images = room_type.images.all() if room_type else []
-#     return render(request, 'reservations/add_room_type.html', {
-#         'form': form,
-#         'action': action,
-#         'room_type': room_type,
-#         'images': images,
-#     })
-
-# def list_room_types(request):
-#     """List all room types"""
-#     room_types = RoomType.objects.prefetch_related('images').all()
-#     return render(request, 'reservations/list_room_types.html', {'room_types': room_types})
-
-# def edit_room_type(request, room_type_id):
-#     """Edit existing room type and add new images"""
-#     room_type = get_object_or_404(RoomType, id=room_type_id)
-
-#     if request.method == 'POST':
-#         form = RoomTypeForm(request.POST, instance=room_type)
-#         files = request.FILES.getlist('images')
-#         if form.is_valid():
-#             form.save()
-#             # Add new images if uploaded
-#             for file in files:
-#                 RoomImage.objects.create(room_type=room_type, image=file)
-#             return redirect('list_room_types')
-#     else:
-#         form = RoomTypeForm(instance=room_type)
-
-#     images = room_type.images.all()
-#     return render(request, 'reservations/edit_room_type.html', {
-#         'form': form,
-#         'room_type': room_type,
-#         'images': images
-#     })
+    return render(request, "reservations/room_search.html", {"results": results, "filters": filters, "email": email})

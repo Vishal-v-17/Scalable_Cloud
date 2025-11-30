@@ -17,13 +17,16 @@
         {% csrf_token %}
 
         <div class="mb-3">
-          <label>Verification Code</label>
+          <label>Signup Verification Code</label>
           <input type="text" name="code" class="form-control" required>
         </div>
 
         <button class="btn btn-dark w-100" type="submit">Verify</button>
       </form>
-
+      <div class="alert alert-info text-center" role="alert">
+        Please check your email and <strong>confirm the SNS subscription</strong> 
+        to receive important notifications.
+      </div>
     </div>
   </div>
 </div>
