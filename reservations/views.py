@@ -144,7 +144,7 @@ dynamodb = boto3.resource("dynamodb", region_name=settings.AWS_REGION)
 table = dynamodb.Table(settings.AWS_DYNAMODB_TABLE)
 s3 = boto3.client("s3")
 
-@cognito_email_allowed(['vishalv1705@gmail.com'])
+@cognito_email_allowed(['cpphotelproject@gmail.com'])
 def create_room(request):
     email = request.session.get("email")
     if request.method == "POST":
