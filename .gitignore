@@ -12,6 +12,8 @@ db.sqlite3
 env/
 venv/
 
+#Add the AWS service Keys file to the Github because the git main push failed
+.env
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*

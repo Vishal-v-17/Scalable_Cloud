@@ -130,7 +130,7 @@ MEDIA_URL = '/media/'
 #Cognito service
 COGNITO_USER_POOL_ID = "us-east-1_Vt8CLlYxo"
 COGNITO_CLIENT_ID = "7cnjick3gp8ubsengut0s5tj0f"
-COGNITO_CLIENT_SECRET = "1c13jvuinkasblh11sobp8vbhalgbre6be8oadep6ogmge3nbc70"
+# COGNITO_CLIENT_SECRET = "1c13jvuinkasblh11sobp8vbhalgbre6be8oadep6ogmge3nbc70"
 COGNITO_REGION = "us-east-1"
 
 SESSION_COOKIE_SAMESITE = "Lax"
@@ -145,13 +145,14 @@ AWS_REGION = "us-east-1"
 AWS_DYNAMODB_TABLE = "Rooms"
 AWS_DYNAMODB_TABLE_1 = "Bookings"
 
-# #API GATEWAY
-# API_GATEWAY_BOOK_URL = "https://sodvr7qdxj.execute-api.us-east-1.amazonaws.com/prod/bookRoom"
-# API_GATEWAY_PAYMENT_URL = "https://jx36upcxz1.execute-api.us-east-1.amazonaws.com/prod/payment"
+# # #API GATEWAY
+# # API_GATEWAY_BOOK_URL = "https://sodvr7qdxj.execute-api.us-east-1.amazonaws.com/prod/bookRoom"
+# # API_GATEWAY_PAYMENT_URL = "https://jx36upcxz1.execute-api.us-east-1.amazonaws.com/prod/payment"
 
 LAMBDA_BOOK_ROOM = "booking_handler"
 LAMBDA_PAYMENT = "processPayment"
-#SNS
+
+# #SNS
 SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:992382373831:PaymentNotifications"
 
 #S3
