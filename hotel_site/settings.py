@@ -129,8 +129,8 @@ MEDIA_URL = '/media/'
 
 #Cognito service
 COGNITO_USER_POOL_ID = "us-east-1_Vt8CLlYxo"
-COGNITO_CLIENT_ID = "5ip7s8epupq8mkft1n2uel68sq"
-COGNITO_CLIENT_SECRET = "1r5gr3o3ut3lubmb7l8inujaqloh382sndppiru4i31klgiuovoc"
+COGNITO_CLIENT_ID = "7cnjick3gp8ubsengut0s5tj0f"
+COGNITO_CLIENT_SECRET = "1c13jvuinkasblh11sobp8vbhalgbre6be8oadep6ogmge3nbc70"
 COGNITO_REGION = "us-east-1"
 
 SESSION_COOKIE_SAMESITE = "Lax"
@@ -152,7 +152,7 @@ AWS_DYNAMODB_TABLE_1 = "Bookings"
 LAMBDA_BOOK_ROOM = "booking_handler"
 LAMBDA_PAYMENT = "processPayment"
 #SNS
-SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:985835920921:PaymentNotifications"
+SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:992382373831:PaymentNotifications"
 
 #S3
 AWS_S3_BUCKET_NAME = "room-images-myhotel"

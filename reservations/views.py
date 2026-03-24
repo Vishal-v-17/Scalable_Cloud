@@ -7,6 +7,7 @@ from .decorators import cognito_email_allowed, unauthenticated_user
 #cognito
 import hmac
 import hashlib
+import re
 
 from django.conf import settings
 from django.shortcuts import redirect
@@ -82,10 +83,28 @@ def get_secret_hash(username):
     ).digest()
     return base64.b64encode(dig).decode()
 
+def is_valid_password(password):
+    if len(password) < 8:
+        return False
+    if not re.search(r"[A-Z]", password):
+        return False
+    if not re.search(r"[a-z]", password):
+        return False
+    if not re.search(r"[0-9]", password):
+        return False
+    if not re.search(r"[!@#$%^&*]", password):
+        return False
+    return True
+
 def signup(request):
     if request.method == "POST":
         email = request.POST.get("email")
         password = request.POST.get("password")
+        
+        if not is_valid_password(password):
+            return render(request, "reservations/signup.html", {
+                "error": "Password must include uppercase, lowercase, number, and special character"
+            })
 
         try:
             client.sign_up(
