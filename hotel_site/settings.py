@@ -130,7 +130,7 @@ MEDIA_URL = '/media/'
 #Cognito service
 COGNITO_USER_POOL_ID = "us-east-1_Vt8CLlYxo"
 COGNITO_CLIENT_ID = "7cnjick3gp8ubsengut0s5tj0f"
-# COGNITO_CLIENT_SECRET = "1c13jvuinkasblh11sobp8vbhalgbre6be8oadep6ogmge3nbc70"
+COGNITO_CLIENT_SECRET = "1c13jvuinkasblh11sobp8vbhalgbre6be8oadep6ogmge3nbc70"
 COGNITO_REGION = "us-east-1"
 
 SESSION_COOKIE_SAMESITE = "Lax"
