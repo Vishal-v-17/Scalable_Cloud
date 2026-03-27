@@ -10,49 +10,59 @@ class RoomSearchEngine:
     def search(self, filters):
 
         response = self.table.scan()
-        rooms = response.get("Items", [])
+        items = response.get("Items", [])
 
-        occ_filter     = filters.get("occupancy")
-        bed_filter     = filters.get("bed_size")
-        layout_filter  = filters.get("layout")
-        rating_filter  = filters.get("rating")
-        min_price      = filters.get("min_price")
-        max_price      = filters.get("max_price")
-        keyword        = filters.get("keyword", "").strip().lower()
+        def match(item):
+            for key, value in filters.items():
 
-        wifi_val = filters.get("wifi")
-        wifi_filter = None
-        if wifi_val == "true":
-            wifi_filter = True
-        elif wifi_val == "false":
-            wifi_filter = False
+                item_value = item.get(key)
 
-        def match(room):
+                # Skip empty filters
+                if value is None or value == "":
+                    continue
 
-            if occ_filter and str(room.get("occupancy")) != str(occ_filter):
-                return False
+                # Handle numeric comparisons
+                if isinstance(value, dict):
+                    if "min" in value and Decimal(item_value) < Decimal(value["min"]):
+                        return False
+                    if "max" in value and Decimal(item_value) > Decimal(value["max"]):
+                        return False
 
-            if bed_filter and room.get("bed_size") != bed_filter:
-                return False
+                # Handle string match (case-insensitive)
+                elif isinstance(value, str):
+                    if value.lower() not in str(item_value).lower():
+                        return False
 
-            if layout_filter and room.get("layout", "").lower() != layout_filter.lower():
-                return False
-
-            if wifi_filter is not None and room.get("wifi") != wifi_filter:
-                return False
-
-            if min_price and Decimal(room.get("price")) < Decimal(min_price):
-                return False
-
-            if max_price and Decimal(room.get("price")) > Decimal(max_price):
-                return False
-
-            if rating_filter and str(room.get("rating")) <= str(rating_filter):
-                return False
-
-            if keyword and keyword not in room.get("description", "").lower():
-                return False
+                # Exact match (numbers, booleans)
+                else:
+                    if item_value != value:
+                        return False
 
             return True
 
-        return [room for room in rooms if match(room)]
+        filtered_items = [item for item in items if match(item)]
+
+        # 🔥 Convert to generic structure
+
+        if not filtered_items:
+            return {
+                "columns": [],
+                "data": []
+            }
+
+        # Dynamic columns
+        all_keys = set()
+        for item in filtered_items:
+            all_keys.update(item.keys())
+
+        columns = list(all_keys)
+
+        data = [
+            [item.get(col, None) for col in columns]
+            for item in filtered_items
+        ]
+
+        return {
+            "columns": columns,
+            "data": data
+        }

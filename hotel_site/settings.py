@@ -156,4 +156,4 @@ LAMBDA_PAYMENT = "processPayment"
 SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:992382373831:PaymentNotifications"
 
 #S3
-AWS_S3_BUCKET_NAME = "room-images-myhotel"
+AWS_S3_BUCKET_NAME = "myhotel-room-images"
