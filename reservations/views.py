@@ -31,6 +31,14 @@ from datetime import datetime
 client = boto3.client("cognito-idp", region_name=settings.COGNITO_REGION)
 sns = boto3.client("sns", region_name="us-east-1")
 
+def get_dynamodb():
+    """Always creates fresh boto3 resource — handles AWS Academy session restarts."""
+    return boto3.resource("dynamodb", region_name=settings.AWS_REGION)
+
+def get_s3():
+    """Always creates fresh boto3 client — handles AWS Academy session restarts."""
+    return boto3.client("s3", region_name=settings.AWS_REGION)
+
 def home(request):
     email = request.session.get("email")
     return render(request, "reservations/home.html", {"email": email})
@@ -209,10 +217,14 @@ def create_room(request):
 
 def list_rooms(request):
     email = request.session.get("email")
+    
+    dynamodb       = get_dynamodb()
+    s3             = get_s3()
+    table          = dynamodb.Table(settings.AWS_DYNAMODB_TABLE)
+    bookings_table = dynamodb.Table(settings.AWS_DYNAMODB_TABLE_1)
+    
     response = table.scan()  
     rooms = response.get("Items", [])
-    
-    bookings_table = dynamodb.Table(settings.AWS_DYNAMODB_TABLE_1)
 
     for room in rooms:
         for key, value in room.items():
