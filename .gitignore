@@ -21,3 +21,6 @@ venv/
 !.elasticbeanstalk/*.global.yml
 !.elasticbeanstalk/config.yml
 roomsearch/.pypirc
+
+# Spark
+spark-3.5.8-bin-hadoop3.tgz
