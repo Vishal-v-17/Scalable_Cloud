@@ -4,6 +4,12 @@ from .forms import BookingForm, RoomForm
 from .models import Room, Booking, Payment, RoomStatus, RoomType
 from .decorators import cognito_email_allowed, unauthenticated_user
 from .service import search_rooms
+from .spark_report import (
+    trigger_glue_job,
+    fetch_report_from_s3,
+    get_latest_job_status,
+)
+
 #cognito
 import hmac
 import hashlib
@@ -367,18 +373,77 @@ def payment_success(request):
             
 #     return render(request, "reservations/room_search.html", {"results": results, "filters": filters, "email": email})
 
+# ── Views ─────────────────────────────────────────────────────────────────────
 def room_search(request):
     email = request.session.get("email")
+
     filters = {
-        "occupancy": request.GET.get("occupancy"),
-        "bed_size": request.GET.get("bed_size"),
-        "wifi": request.GET.get("wifi"),
-        "min_price": request.GET.get("min_price"),
-        "max_price": request.GET.get("max_price"),
+        "occupancy":  request.GET.get("occupancy"),
+        "bed_size":   request.GET.get("bed_size"),
+        "wifi":       request.GET.get("wifi"),
+        "min_price":  request.GET.get("min_price"),
+        "max_price":  request.GET.get("max_price"),
+        "layout":     request.GET.get("layout"),
+        "rating":     request.GET.get("rating"),
+        "keyword":    request.GET.get("keyword"),
     }
-    results = search_rooms(filters)  # Calls the Lambda API
-    return render(request, "reservations/room_search.html", {"results": results, "filters": filters, "email": email})
+
+    results = search_rooms(filters)
+
+    return render(request, "reservations/room_search.html", {
+        "results": results,
+        "filters": filters,
+        "email":   email,
+    })
     
 def map_view(request):
     email = request.session.get("email")
     return render(request, "reservations/map.html", {"google_maps_api_key": settings.GOOGLE_MAPS_API_KEY, "email": email})
+
+def run_glue_job(request):
+    """Trigger the Glue job and redirect back to the report page."""
+    if request.method == "POST":
+        try:
+            run_id = trigger_glue_job()
+            messages.success(
+                request,
+                f"Glue job started successfully. Run ID: {run_id}. "
+                f"Refresh the page in ~2 minutes to see updated results."
+            )
+        except Exception as e:
+            messages.error(request, f"Failed to start Glue job: {e}")
+    return redirect("glue_report")
+
+# reservations/views.py  (glue_report function only)
+
+def glue_report(request):
+    error      = None
+    report     = {}
+    overall    = {}
+    job_status = None
+
+    email = request.session.get("email")
+    
+    # get job status — never crashes now
+    try:
+        job_status = get_latest_job_status()
+    except Exception as e:
+        job_status = {"state": "ERROR", "error": str(e),
+                      "run_id": "", "started": "", "ended": ""}
+
+    # fetch report — never crashes now
+    try:
+        report  = fetch_report_from_s3()
+        overall = report.get("overall", {})
+    except RuntimeError as e:
+        error = str(e)
+    except Exception as e:
+        error = f"Unexpected error: {e}"
+
+    return render(request, "reservations/report.html", {
+        "overall":      overall,
+        "has_bookings": report.get("has_bookings", False),
+        "error":        error,
+        "job_status":   job_status,
+        "email": email
+    })

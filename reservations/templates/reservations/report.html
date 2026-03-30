@@ -1,0 +1,480 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hotel Rooms | Welcome</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+  </head>
+  <style>
+
+    /* ── Layout ── */
+/* ── Layout ── */
+.report-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+/* ── Error banner ── */
+.report-page .error-banner {
+  background: #fff5f5;
+  border: 1px solid #fc8181;
+  color: #c53030;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+/* ── Section title ── */
+.report-page .section-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #718096;
+  margin: 2rem 0 1rem;
+}
+
+/* ── Stat cards ── */
+.report-page .stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 1rem;
+}
+
+.report-page .stat-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  border-top: 4px solid var(--accent, #4299e1);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.report-page .stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.report-page .stat-card .label {
+  font-size: 0.78rem;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.report-page .stat-card .value {
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: #1a202c;
+  line-height: 1;
+}
+
+.report-page .stat-card .sub {
+  font-size: 0.75rem;
+  color: #a0aec0;
+  margin-top: 4px;
+}
+
+/* accent colours */
+.report-page .acc-blue   { --accent: #4299e1; }
+.report-page .acc-green  { --accent: #48bb78; }
+.report-page .acc-orange { --accent: #ed8936; }
+.report-page .acc-red    { --accent: #fc8181; }
+.report-page .acc-purple { --accent: #9f7aea; }
+.report-page .acc-teal   { --accent: #38b2ac; }
+
+/* ── Wi-Fi bar ── */
+.report-page .wifi-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  margin-top: 1rem;
+}
+
+.report-page .wifi-section h3 {
+  font-size: 0.85rem;
+  color: #4a5568;
+  margin-bottom: 1rem;
+}
+
+.report-page .bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.report-page .bar-label {
+  font-size: 0.8rem;
+  color: #718096;
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.report-page .bar-track {
+  flex: 1;
+  height: 14px;
+  background: #edf2f7;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.report-page .bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.6s ease;
+}
+
+.report-page .bar-fill.wifi-yes { background: #48bb78; }
+.report-page .bar-fill.wifi-no  { background: #fc8181; }
+
+.report-page .bar-count {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #2d3748;
+  width: 24px;
+  text-align: right;
+}
+
+/* ── Bookings notice ── */
+.report-page .notice {
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  font-size: 0.88rem;
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.report-page .notice.green {
+  background: #f0fff4;
+  border: 1px solid #9ae6b4;
+  color: #276749;
+}
+
+.report-page .notice.gray {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  color: #718096;
+}
+
+.report-page .notice-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.report-page .notice.green .notice-dot { background: #48bb78; }
+.report-page .notice.gray  .notice-dot { background: #cbd5e0; }
+
+/* ── Buttons (scoped so navbar is safe) ── */
+.report-page .btn {
+  display: inline-block;
+  padding: 0.65rem 1.4rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+}
+
+.report-page .btn-primary {
+  background: #2b6cb0;
+  color: #fff;
+}
+
+.report-page .btn-primary:hover {
+  background: #2c5282;
+}
+
+.report-page .btn-outline {
+  background: transparent;
+  border: 1px solid #cbd5e0;
+  color: #4a5568;
+}
+
+.report-page .btn-outline:hover {
+  background: #edf2f7;
+}
+
+/* ── Empty state ── */
+.report-page .empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #a0aec0;
+}
+
+.report-page .empty h2 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: #718096;
+}
+
+.report-page .empty p {
+  font-size: 0.85rem;
+}
+  </style>
+    <body>
+      <!-- Navbar -->
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand fw-bold" href="{% url 'home' %}">🏨 MyHotel</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarText">
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link" aria-current="page" href="{% url 'home' %}">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'list_room_types' %}">Rooms</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'amenities' %}">Amenities</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'create_room' %}">Add Room</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'map' %}">Map</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'glue_report' %}">Report</a>
+              </li>
+              <form class="d-flex align-items-center" method="GET" action="{% url 'room_search' %}">
+    
+                  <!-- Search Input -->
+                  <input
+                      class="form-control form-control-sm me-2"
+                      type="search"
+                      name="keyword"
+                      placeholder="Search description..."
+                      aria-label="Search"
+                      value="{{ request.GET.keyword }}"
+                  >
+              
+                  <!-- Dropdown Button -->
+                  <div class="dropdown me-2">
+                      <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                              type="button" 
+                              data-bs-toggle="dropdown" 
+                              aria-expanded="false">
+                          Filters
+                      </button>
+              
+                      <!-- DROPDOWN MENU -->
+                      <div class="dropdown-menu p-3 shadow" style="min-width: 250px;">
+              
+                          <!-- Occupancy -->
+                          <label class="form-label fw-bold mb-1">Occupancy</label>
+                          <select class="form-select form-select-sm mb-3" name="occupancy">
+                              <option value="">Any Occupancy</option>
+                              <option value="Single">Single</option>
+                              <option value="Double">Double</option>
+                              <option value="Triple">Triple</option>
+                              <option value="Quad">Quad</option>
+                          </select>
+              
+                          <!-- Bed Size -->
+                          <label class="form-label fw-bold mb-1">Bed Size</label>
+                          <select class="form-select form-select-sm mb-3" name="bed_size">
+                              <option value="">Any Bed Size</option>
+                              <option value="King">King</option>
+                              <option value="Queen">Queen</option>
+                              <option value="Twin">Twin</option>
+                          </select>
+              
+                          <!-- Layout -->
+                          <label class="form-label fw-bold mb-1">Layout</label>
+                          <select class="form-select form-select-sm mb-3" name="layout">
+                              <option value="">Any Layout</option>
+                              <option value="Standard">Standard</option>
+                              <option value="Deluxe">Deluxe</option>
+                              <option value="Suite">Suite</option>
+                          </select>
+              
+                          <!-- Wifi -->
+                          <label class="form-label fw-bold mb-1">Wifi</label>
+                          <select class="form-select form-select-sm mb-3" name="wifi">
+                              <option value="">Any</option>
+                              <option value="true">Available</option>
+                              <option value="false">Not Available</option>
+                          </select>
+              
+                          <!-- Min / Max Price -->
+                          <div class="row">
+                              <div class="col">
+                                  <label class="form-label fw-bold mb-1">Min Price</label>
+                                  <input type="number" name="min_price" 
+                                         class="form-control form-control-sm mb-3"
+                                         placeholder="0">
+                              </div>
+              
+                              <div class="col">
+                                  <label class="form-label fw-bold mb-1">Max Price</label>
+                                  <input type="number" name="max_price" 
+                                         class="form-control form-control-sm mb-3"
+                                         placeholder="500">
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              
+                  <!-- Submit -->
+                  <button class="btn btn-primary btn-sm" type="submit">Search</button>
+              </form>
+            </ul>
+            <nav class="navbar">
+              {% if email %}
+                <li class="nav-item me-3 text-light d-flex align-items-center">
+                  Hello, <strong class="ms-1">{{ email }}</strong>
+                </li>
+                <li class="nav-item"><a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">Logout</a></li>
+              {% else %}
+                <li class="nav-item me-2"><a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">Login</a></li>
+              {% endif %}
+              </nav>
+          </div>
+        </div>
+      </nav>
+
+<main class="report-page">
+
+  {% if error %}
+  <div class="error-banner">
+    <strong>Could not load report:</strong> {{ error }}<br>
+    <small>Make sure the Glue job has run and the S3 report file exists.</small>
+  </div>
+  {% endif %}
+
+  {% if overall %}
+
+  <!-- ── Overall summary cards ── -->
+  <p class="section-title">Overall hotel summary</p>
+  <div class="stat-grid">
+
+    <div class="stat-card acc-blue">
+      <div class="label">Total rooms</div>
+      <div class="value">{{ overall.total_rooms|default:"—" }}</div>
+      <div class="sub">across all categories</div>
+    </div>
+
+    <div class="stat-card acc-green">
+      <div class="label">Avg. price / night</div>
+      <div class="value">
+        ${% if overall.avg_price %}{{ overall.avg_price }}{% else %}—{% endif %}
+      </div>
+      <div class="sub">mean across all rooms</div>
+    </div>
+
+    <div class="stat-card acc-teal">
+      <div class="label">Cheapest room</div>
+      <div class="value">
+        ${% if overall.cheapest_room %}{{ overall.cheapest_room }}{% else %}—{% endif %}
+      </div>
+      <div class="sub">lowest nightly rate</div>
+    </div>
+
+    <div class="stat-card acc-orange">
+      <div class="label">Most expensive</div>
+      <div class="value">
+        ${% if overall.most_expensive_room %}{{ overall.most_expensive_room }}{% else %}—{% endif %}
+      </div>
+      <div class="sub">premium room rate</div>
+    </div>
+
+    <div class="stat-card acc-purple">
+      <div class="label">Avg. rating</div>
+      <div class="value">
+        {% if overall.avg_rating %}{{ overall.avg_rating }}{% else %}—{% endif %}
+        <span style="font-size:1rem; color:#9f7aea;">★</span>
+      </div>
+      <div class="sub">guest satisfaction</div>
+    </div>
+
+    <div class="stat-card acc-red">
+      <div class="label">Top rating</div>
+      <div class="value">
+        {% if overall.top_rating %}{{ overall.top_rating }}{% else %}—{% endif %}
+        <span style="font-size:1rem; color:#fc8181;">★</span>
+      </div>
+      <div class="sub">highest-rated room</div>
+    </div>
+
+  </div>
+
+  <!-- ── Wi-Fi breakdown ── -->
+  <p class="section-title">Wi-Fi availability</p>
+  <div class="wifi-section">
+    <h3>Rooms with / without wi-fi</h3>
+
+    {% with total=overall.total_rooms wifi=overall.rooms_with_wifi no_wifi=overall.rooms_without_wifi %}
+    {% if total %}
+
+    <div class="bar-row">
+      <span class="bar-label">With wi-fi</span>
+      <div class="bar-track">
+        <div class="bar-fill wifi-yes"
+             style="width: {% widthratio wifi total 100 %}%">
+        </div>
+      </div>
+      <span class="bar-count">{{ wifi }}</span>
+    </div>
+
+    <div class="bar-row">
+      <span class="bar-label">Without wi-fi</span>
+      <div class="bar-track">
+        <div class="bar-fill wifi-no"
+             style="width: {% widthratio no_wifi total 100 %}%">
+        </div>
+      </div>
+      <span class="bar-count">{{ no_wifi }}</span>
+    </div>
+
+    {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- ── Bookings status ── -->
+  <p class="section-title">Bookings</p>
+  {% if has_bookings %}
+  <div class="notice green">
+    <div class="notice-dot"></div>
+    Active bookings are present in the system.
+  </div>
+  {% else %}
+  <div class="notice gray">
+    <div class="notice-dot"></div>
+    No bookings recorded in this report run.
+  </div>
+  {% endif %}
+
+  {% else %}
+  <!-- Empty state — Glue job not yet run -->
+  <div class="empty">
+    <h2>No report data found</h2>
+    <p>Run the AWS Glue job to generate the hotel analytics report.</p>
+  </div>
+  {% endif %}
+
+</main>
+
+      <!-- Footer -->
+      <footer class="bg-dark text-light text-center py-3">
+        <p class="mb-0">&copy; 2025 MyHotel. All Rights Reserved.</p>
+      </footer>
+
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
+  </html>

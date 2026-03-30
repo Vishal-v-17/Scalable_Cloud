@@ -163,3 +163,5 @@ AWS_S3_BASE_URL = f"https://{AWS_S3_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com"
 ROOM_SEARCH_API_URL = "https://abc123.execute-api.us-east-1.amazonaws.com/search"
 
 GOOGLE_MAPS_API_KEY = "AIzaSyDSo9AZrzdzSgHYAaONUMLLRNWjkqATVR0"
+
+GLUE_JOB_NAME = "my-glue-job"

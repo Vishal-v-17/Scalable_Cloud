@@ -15,4 +15,5 @@ urlpatterns = [
     path("rooms/search/", views.room_search, name="room_search"),
     path('amenities/', views.amenities_page, name='amenities'),
     path("map/", views.map_view, name="map"),
+    path("report/", views.glue_report, name="glue_report"),
 ]
