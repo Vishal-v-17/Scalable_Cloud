@@ -44,6 +44,9 @@
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'create_room' %}">Add Room</a>
               </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'map' %}">Map</a>
+              </li>
               <form class="d-flex align-items-center" method="GET" action="{% url 'room_search' %}">
     
                   <!-- Search Input -->
@@ -171,7 +174,7 @@
         <!-- LEFT IMAGE -->
         <div class="col-4">
           {% if room.image_url %}
-            <img src="{{ room.image_url }}"
+            <img src="{{ room.image_url|safe }}"
                 alt="{{ room.layout }}"
                 class="img-fluid rounded-4"
                 style="height: 120px; width: 100%; object-fit: cover;">

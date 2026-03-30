@@ -29,7 +29,10 @@
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'create_room' %}">Add Room</a>
               </li>
-                            <form class="d-flex align-items-center" method="GET" action="{% url 'room_search' %}">
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'map' %}">Map</a>
+              </li>
+              <form class="d-flex align-items-center" method="GET" action="{% url 'room_search' %}">
     
                   <!-- Search Input -->
                   <input

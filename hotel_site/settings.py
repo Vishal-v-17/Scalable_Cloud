@@ -157,3 +157,9 @@ SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:992382373831:PaymentNotifications"
 
 #S3
 AWS_S3_BUCKET_NAME = "myhotel-room-images"
+AWS_S3_BASE_URL = f"https://{AWS_S3_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com"
+
+# hotel_site/settings.py
+ROOM_SEARCH_API_URL = "https://abc123.execute-api.us-east-1.amazonaws.com/search"
+
+GOOGLE_MAPS_API_KEY = "AIzaSyDSo9AZrzdzSgHYAaONUMLLRNWjkqATVR0"

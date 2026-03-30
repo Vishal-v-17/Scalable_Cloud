@@ -3,7 +3,7 @@ from django.contrib import messages
 from .forms import BookingForm, RoomForm
 from .models import Room, Booking, Payment, RoomStatus, RoomType
 from .decorators import cognito_email_allowed, unauthenticated_user
-
+from .service import search_rooms
 #cognito
 import hmac
 import hashlib
@@ -26,7 +26,7 @@ from decimal import Decimal
 from datetime import datetime
 
 #Library API
-import roomsearch
+
 
 client = boto3.client("cognito-idp", region_name=settings.COGNITO_REGION)
 sns = boto3.client("sns", region_name="us-east-1")
@@ -206,14 +206,13 @@ def create_room(request):
         form = RoomForm()
 
     return render(request, "reservations/add_room_type.html", {"form": form, "email": email})
-    
-dynamodB = boto3.resource("dynamodb", region_name=settings.AWS_REGION)
-bookings_table = dynamodB.Table(settings.AWS_DYNAMODB_TABLE_1)
 
 def list_rooms(request):
     email = request.session.get("email")
     response = table.scan()  
     rooms = response.get("Items", [])
+    
+    bookings_table = dynamodb.Table(settings.AWS_DYNAMODB_TABLE_1)
 
     for room in rooms:
         for key, value in room.items():
@@ -265,7 +264,7 @@ def book_room(request, room_id):
 
         # --- Call Lambda directly ---
         response = lambda_client.invoke(
-            FunctionName=settings.LAMBDA_BOOK_ROOM,  # add in settings
+            FunctionName=settings.LAMBDA_BOOK_ROOM,
             InvocationType="RequestResponse",
             Payload=json.dumps(payload),
         )
@@ -329,38 +328,45 @@ def payment_success(request):
     return render(request, "payment_success.html", {"email": email})
 
 
+
+# ROOM_SEARCH_API = "http://127.0.0.1:8080"
+
+# def room_search(request):
+#     email = request.session.get("email")
+
+#     # Build filters from GET params (same as before)
+#     filters = {
+#         key: request.GET.get(key, "").strip()
+#         for key in ["occupancy", "bed_size", "layout", "wifi",
+#                     "min_price", "max_price", "rating", "keyword"]
+#     }
+
+#     # Call the API — no aws_config needed (uses .env), request image URLs
+#     response = requests.post(
+#         f"{ROOM_SEARCH_API}/rooms/search",
+#         json={
+#             "generate_image_urls": True,    # ← tells API to attach S3 URLs
+#             "filters": filters,
+#         }
+#     )
+#     response.raise_for_status()
+#     data    = response.json()
+#     results = data["results"]               # already has image_url attached
+            
+#     return render(request, "reservations/room_search.html", {"results": results, "filters": filters, "email": email})
+
 def room_search(request):
     email = request.session.get("email")
-    search_engine = roomsearch.RoomSearchEngine()
-
-    filters = {}
-
-    for key in ["occupancy", "bed_size", "layout", "wifi", "rating", "keyword"]:
-        value = request.GET.get(key)
-        if value:
-            filters[key] = value.strip()
-    
-    min_price = request.GET.get("min_price")
-    max_price = request.GET.get("max_price")
-    
-    if min_price or max_price:
-        filters["price"] = {}
-        if min_price:
-            filters["price"]["min"] = min_price
-        if max_price:
-            filters["price"]["max"] = max_price
-
-    results = search_engine.search(filters)
-    
-    columns = results["columns"]
-    data = results["data"]
-    
-    rooms = [
-        dict(zip(columns, row))
-        for row in data
-    ]
-    
-    for room in rooms:
-        image_key = room.get("image_key")
-            
+    filters = {
+        "occupancy": request.GET.get("occupancy"),
+        "bed_size": request.GET.get("bed_size"),
+        "wifi": request.GET.get("wifi"),
+        "min_price": request.GET.get("min_price"),
+        "max_price": request.GET.get("max_price"),
+    }
+    results = search_rooms(filters)  # Calls the Lambda API
     return render(request, "reservations/room_search.html", {"results": results, "filters": filters, "email": email})
+    
+def map_view(request):
+    email = request.session.get("email")
+    return render(request, "reservations/map.html", {"google_maps_api_key": settings.GOOGLE_MAPS_API_KEY, "email": email})

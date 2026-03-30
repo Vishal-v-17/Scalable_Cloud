@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hotel Rooms | Welcome</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body { font-family: Arial, sans-serif; }
+
+    /* ── Map takes full viewport height ── */
+    #map {
+      width: 100%;
+      height: calc(100vh - 60px);
+    }
+
+    /* ── Top bar ── */
+    .map-bar {
+      height: 60px;
+      background: #1a1612;
+      display: flex;
+      align-items: center;
+      padding: 0 1.5rem;
+      gap: 1rem;
+    }
+
+    .map-bar h1 {
+      color: #c9a96e;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    /* ── Search box overlay ── */
+    .search-overlay {
+      position: absolute;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      gap: 0.5rem;
+      background: white;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      width: 90%;
+      max-width: 500px;
+    }
+
+    .search-overlay input {
+      flex: 1;
+      border: 1.5px solid #e8e0d5;
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .search-overlay input:focus {
+      border-color: #c9a96e;
+    }
+
+    .search-overlay button {
+      background: #1a1612;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    .search-overlay button:hover {
+      background: #2d2520;
+    }
+
+    /* ── Info panel that slides in when marker clicked ── */
+    .info-panel {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      border-radius: 16px;
+      padding: 1.25rem 1.5rem;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+      width: 90%;
+      max-width: 400px;
+      z-index: 10;
+      display: none;
+    }
+
+    .info-panel h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .info-panel p {
+      font-size: 0.85rem;
+      color: #8a7f74;
+    }
+
+    .info-panel .close-btn {
+      position: absolute;
+      top: 0.75rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.1rem;
+      cursor: pointer;
+      color: #8a7f74;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top bar -->
+        <!-- Navbar -->
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand fw-bold" href="{% url 'home' %}">🏨 MyHotel</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarText">
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link" aria-current="page" href="{% url 'home' %}">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'list_room_types' %}">Rooms</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'amenities' %}">Amenities</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'create_room' %}">Add Room</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'map' %}">Map</a>
+              </li>
+              <form class="d-flex align-items-center" method="GET" action="{% url 'room_search' %}">
+    
+                  <!-- Search Input -->
+                  <input
+                      class="form-control form-control-sm me-2"
+                      type="search"
+                      name="keyword"
+                      placeholder="Search description..."
+                      aria-label="Search"
+                      value="{{ request.GET.keyword }}"
+                  >
+              
+                  <!-- Dropdown Button -->
+                  <div class="dropdown me-2">
+                      <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                              type="button" 
+                              data-bs-toggle="dropdown" 
+                              aria-expanded="false">
+                          Filters
+                      </button>
+              
+                      <!-- DROPDOWN MENU -->
+                      <div class="dropdown-menu p-3 shadow" style="min-width: 250px;">
+              
+                          <!-- Occupancy -->
+                          <label class="form-label fw-bold mb-1">Occupancy</label>
+                          <select class="form-select form-select-sm mb-3" name="occupancy">
+                              <option value="">Any Occupancy</option>
+                              <option value="Single">Single</option>
+                              <option value="Double">Double</option>
+                              <option value="Triple">Triple</option>
+                              <option value="Quad">Quad</option>
+                          </select>
+              
+                          <!-- Bed Size -->
+                          <label class="form-label fw-bold mb-1">Bed Size</label>
+                          <select class="form-select form-select-sm mb-3" name="bed_size">
+                              <option value="">Any Bed Size</option>
+                              <option value="King">King</option>
+                              <option value="Queen">Queen</option>
+                              <option value="Twin">Twin</option>
+                          </select>
+              
+                          <!-- Layout -->
+                          <label class="form-label fw-bold mb-1">Layout</label>
+                          <select class="form-select form-select-sm mb-3" name="layout">
+                              <option value="">Any Layout</option>
+                              <option value="Standard">Standard</option>
+                              <option value="Deluxe">Deluxe</option>
+                              <option value="Suite">Suite</option>
+                          </select>
+              
+                          <!-- Wifi -->
+                          <label class="form-label fw-bold mb-1">Wifi</label>
+                          <select class="form-select form-select-sm mb-3" name="wifi">
+                              <option value="">Any</option>
+                              <option value="true">Available</option>
+                              <option value="false">Not Available</option>
+                          </select>
+              
+                          <!-- Min / Max Price -->
+                          <div class="row">
+                              <div class="col">
+                                  <label class="form-label fw-bold mb-1">Min Price</label>
+                                  <input type="number" name="min_price" 
+                                         class="form-control form-control-sm mb-3"
+                                         placeholder="0">
+                              </div>
+              
+                              <div class="col">
+                                  <label class="form-label fw-bold mb-1">Max Price</label>
+                                  <input type="number" name="max_price" 
+                                         class="form-control form-control-sm mb-3"
+                                         placeholder="500">
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              
+                  <!-- Submit -->
+                  <button class="btn btn-primary btn-sm" type="submit">Search</button>
+              </form>
+            </ul>
+            <nav class="navbar">
+              {% if email %}
+                <li class="nav-item me-3 text-light d-flex align-items-center">
+                  Hello, <strong class="ms-1">{{ email }}</strong>
+                </li>
+                <li class="nav-item"><a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">Logout</a></li>
+              {% else %}
+                <li class="nav-item me-2"><a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">Login</a></li>
+              {% endif %}
+              </nav>
+          </div>
+        </div>
+      </nav>
+
+  <!-- Search box -->
+  <div class="search-overlay">
+    <input type="text" id="search-input" placeholder="Search a location...">
+    <button onclick="searchLocation()">Search</button>
+    <button onclick="goToMyLocation()">📍 Me</button>
+  </div>
+
+  <!-- Map -->
+  <div id="map"></div>
+
+  <!-- Info panel -->
+  <div class="info-panel" id="info-panel">
+    <button class="close-btn" onclick="closePanel()">✕</button>
+    <h3 id="panel-title"></h3>
+    <p id="panel-desc"></p>
+  </div>
+
+  <!-- Google Maps Script -->
+  <script>
+    let map;
+    let markers = [];
+    let geocoder;
+    let infoWindow;
+
+    // ── Hotel locations — edit these to match your hotels ──────────────────
+    const hotelLocations = [
+      {
+        name:     "MyHotel - Main Branch",
+        address:  "New York, NY, USA",
+        lat:      40.7580,
+        lng:      -73.9855,
+        desc:     "Our flagship 5-star property in the heart of Midtown Manhattan.",
+        rating:   "5",
+        price:    "$200/night",
+      },
+      {
+        name:     "MyHotel - Downtown",
+        address:  "Brooklyn, NY, USA",
+        lat:      40.6782,
+        lng:      -73.9442,
+        desc:     "Modern rooms with stunning views of the Manhattan skyline.",
+        rating:   "4",
+        price:    "$150/night",
+      },
+      {
+        name:     "MyHotel - Airport",
+        address:  "Queens, NY, USA",
+        lat:      40.7282,
+        lng:      -73.7949,
+        desc:     "Convenient location minutes from JFK Airport.",
+        rating:   "4",
+        price:    "$120/night",
+      },
+    ];
+
+    // ── Initialize map ──────────────────────────────────────────────────────
+    function initMap() {
+      geocoder   = new google.maps.Geocoder();
+      infoWindow = new google.maps.InfoWindow();
+
+      // Center on first hotel
+      map = new google.maps.Map(document.getElementById("map"), {
+        center:    { lat: hotelLocations[0].lat, lng: hotelLocations[0].lng },
+        zoom:      11,
+        mapTypeControl:       false,
+        fullscreenControl:    true,
+        streetViewControl:    false,
+        styles: [
+          { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] }
+        ]
+      });
+
+      // Drop a marker for each hotel
+      hotelLocations.forEach(hotel => addMarker(hotel));
+    }
+
+    // ── Add a marker ────────────────────────────────────────────────────────
+    function addMarker(hotel) {
+      const marker = new google.maps.Marker({
+        position:  { lat: hotel.lat, lng: hotel.lng },
+        map:       map,
+        title:     hotel.name,
+        icon: {
+          path:        google.maps.SymbolPath.CIRCLE,
+          scale:       10,
+          fillColor:   "#c9a96e",
+          fillOpacity: 1,
+          strokeColor: "#1a1612",
+          strokeWeight: 2,
+        }
+      });
+
+      // Click marker → show info panel
+      marker.addListener("click", () => {
+        document.getElementById("panel-title").textContent =
+          `${hotel.name} · ⭐ ${hotel.rating}`;
+        document.getElementById("panel-desc").textContent =
+          `${hotel.desc} — ${hotel.price}`;
+        document.getElementById("info-panel").style.display = "block";
+        map.panTo({ lat: hotel.lat, lng: hotel.lng });
+      });
+
+      markers.push(marker);
+    }
+
+    // ── Search location ─────────────────────────────────────────────────────
+    function searchLocation() {
+      const query = document.getElementById("search-input").value.trim();
+      if (!query) return;
+
+      geocoder.geocode({ address: query }, (results, status) => {
+        if (status === "OK") {
+          map.setCenter(results[0].geometry.location);
+          map.setZoom(13);
+
+          // Drop a temporary search marker
+          new google.maps.Marker({
+            map:      map,
+            position: results[0].geometry.location,
+            title:    query,
+            icon: {
+              path:        google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+              scale:       6,
+              fillColor:   "#e74c3c",
+              fillOpacity: 1,
+              strokeColor: "#fff",
+              strokeWeight: 1,
+            }
+          });
+        } else {
+          alert("Location not found: " + status);
+        }
+      });
+    }
+
+    // ── Go to user's location ───────────────────────────────────────────────
+    function goToMyLocation() {
+      if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          const pos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          map.setCenter(pos);
+          map.setZoom(14);
+
+          new google.maps.Marker({
+            map,
+            position: pos,
+            title:    "You are here",
+            icon: {
+              path:        google.maps.SymbolPath.CIRCLE,
+              scale:       8,
+              fillColor:   "#3498db",
+              fillOpacity: 1,
+              strokeColor: "#fff",
+              strokeWeight: 2,
+            }
+          });
+        },
+        () => alert("Could not get your location.")
+      );
+    }
+
+    // ── Close info panel ────────────────────────────────────────────────────
+    function closePanel() {
+      document.getElementById("info-panel").style.display = "none";
+    }
+
+    // Allow Enter key for search
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("search-input")
+        .addEventListener("keydown", e => {
+          if (e.key === "Enter") searchLocation();
+        });
+    });
+  </script>
+
+  <!-- Load Google Maps — API key injected from Django settings -->
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap"
+    async defer>
+  </script>
+
+</body>
+</html>
