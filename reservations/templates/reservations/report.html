@@ -70,7 +70,7 @@
         <li class="nav-item"><a class="nav-link" href="{% url 'amenities' %}">Amenities</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'create_room' %}">Add Room</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'map' %}">Map</a></li>
-        <li class="nav-item"><a class="nav-link active" href="{% url 'glue_report' %}">Report</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'glue_report' %}">Report</a></li>
         <form class="d-flex align-items-center" method="GET" action="{% url 'room_search' %}">
           <input class="form-control form-control-sm me-2" type="search" name="keyword"
                  placeholder="Search description..." value="{{ request.GET.keyword }}">
@@ -147,7 +147,7 @@
   <!-- Page heading -->
   <div style="display:flex;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:.5rem;">
     <h1 style="font-size:1.5rem;font-weight:600;color:#1a202c;margin:0;">
-      Hotel Analytics Report
+      Hotel Report Analytics 
     </h1>
   </div>
 

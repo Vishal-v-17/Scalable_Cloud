@@ -47,6 +47,9 @@
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'map' %}">Map</a>
               </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'glue_report' %}">Report</a>
+              </li>
               <form class="d-flex align-items-center" method="GET" action="{% url 'room_search' %}">
     
                   <!-- Search Input -->
@@ -70,73 +73,74 @@
               
                       <!-- DROPDOWN MENU -->
                       <div class="dropdown-menu p-3 shadow" style="min-width: 250px;">
-              
-                          <!-- Occupancy -->
-                          <label class="form-label fw-bold mb-1">Occupancy</label>
-                          <select class="form-select form-select-sm mb-3" name="occupancy">
-                              <option value="">Any Occupancy</option>
-                              <option value="Single">Single</option>
-                              <option value="Double">Double</option>
-                              <option value="Triple">Triple</option>
-                              <option value="Quad">Quad</option>
-                          </select>
-              
-                          <!-- Bed Size -->
-                          <label class="form-label fw-bold mb-1">Bed Size</label>
-                          <select class="form-select form-select-sm mb-3" name="bed_size">
-                              <option value="">Any Bed Size</option>
-                              <option value="King">King</option>
-                              <option value="Queen">Queen</option>
-                              <option value="Twin">Twin</option>
-                          </select>
-              
-                          <!-- Layout -->
-                          <label class="form-label fw-bold mb-1">Layout</label>
-                          <select class="form-select form-select-sm mb-3" name="layout">
-                              <option value="">Any Layout</option>
-                              <option value="Standard">Standard</option>
-                              <option value="Deluxe">Deluxe</option>
-                              <option value="Suite">Suite</option>
-                          </select>
-              
-                          <!-- Wifi -->
-                          <label class="form-label fw-bold mb-1">Wifi</label>
-                          <select class="form-select form-select-sm mb-3" name="wifi">
-                              <option value="">Any</option>
-                              <option value="true">Available</option>
-                              <option value="false">Not Available</option>
-                          </select>
-              
-                          <!-- Min / Max Price -->
-                          <div class="row">
-                              <div class="col">
-                                  <label class="form-label fw-bold mb-1">Min Price</label>
-                                  <input type="number" name="min_price" 
-                                         class="form-control form-control-sm mb-3"
-                                         placeholder="0">
-                              </div>
-              
-                              <div class="col">
-                                  <label class="form-label fw-bold mb-1">Max Price</label>
-                                  <input type="number" name="max_price" 
-                                         class="form-control form-control-sm mb-3"
-                                         placeholder="500">
-                              </div>
-                          </div>
-              
-                          <!-- Rating -->
-                          <label class="form-label fw-bold mb-1">Rating</label>
-                          <select name="rating" class="form-select form-select-sm">
-                              <option value="">Any Rating</option>
-                              <option value="1">1+</option>
-                              <option value="2">2+</option>
-                              <option value="3">3+</option>
-                              <option value="4">4+</option>
-                              <option value="5">5</option>
-                          </select>
-              
-                      </div>
-                  </div>
+
+                        <!-- Occupancy -->
+                        <label class="form-label fw-bold mb-1">Occupancy</label>
+                        <select class="form-select form-select-sm mb-3" name="occupancy">
+                            <option value="">Any Occupancy</option>
+                            <option value="Single"  {% if filters.occupancy == "Single"  %}selected{% endif %}>Single</option>
+                            <option value="Double"  {% if filters.occupancy == "Double"  %}selected{% endif %}>Double</option>
+                            <option value="Triple"  {% if filters.occupancy == "Triple"  %}selected{% endif %}>Triple</option>
+                            <option value="Quad"    {% if filters.occupancy == "Quad"    %}selected{% endif %}>Quad</option>
+                        </select>
+                    
+                        <!-- Bed Size -->
+                        <label class="form-label fw-bold mb-1">Bed Size</label>
+                        <select class="form-select form-select-sm mb-3" name="bed_size">
+                            <option value="">Any Bed Size</option>
+                            <option value="King"    {% if filters.bed_size == "King"     %}selected{% endif %}>King</option>
+                            <option value="Queen"   {% if filters.bed_size == "Queen"    %}selected{% endif %}>Queen</option>
+                            <option value="Twin"    {% if filters.bed_size == "Twin"     %}selected{% endif %}>Twin</option>
+                        </select>
+                    
+                        <!-- Layout -->
+                        <label class="form-label fw-bold mb-1">Layout</label>
+                        <select class="form-select form-select-sm mb-3" name="layout">
+                            <option value="">Any Layout</option>
+                            <option value="Standard" {% if filters.layout == "Standard"  %}selected{% endif %}>Standard</option>
+                            <option value="Deluxe"   {% if filters.layout == "Deluxe"    %}selected{% endif %}>Deluxe</option>
+                            <option value="Suite"    {% if filters.layout == "Suite"     %}selected{% endif %}>Suite</option>
+                        </select>
+                    
+                        <!-- Wifi -->
+                        <label class="form-label fw-bold mb-1">Wifi</label>
+                        <select class="form-select form-select-sm mb-3" name="wifi">
+                            <option value="">Any</option>
+                            <option value="true"    {% if filters.wifi == "true"         %}selected{% endif %}>Available</option>
+                            <option value="false"   {% if filters.wifi == "false"        %}selected{% endif %}>Not Available</option>
+                        </select>
+                    
+                        <!-- Min / Max Price -->
+                        <div class="row">
+                            <div class="col">
+                                <label class="form-label fw-bold mb-1">Min Price</label>
+                                <input type="number" name="min_price"
+                                       class="form-control form-control-sm mb-3"
+                                       placeholder="0"
+                                       value="{{ filters.min_price|default:'' }}">
+                            </div>
+                            <div class="col">
+                                <label class="form-label fw-bold mb-1">Max Price</label>
+                                <input type="number" name="max_price"
+                                       class="form-control form-control-sm mb-3"
+                                       placeholder="500"
+                                       value="{{ filters.max_price|default:'' }}">
+                            </div>
+                        </div>
+                    
+                        <!-- Rating -->
+                        <label class="form-label fw-bold mb-1">Rating</label>
+                        <select name="rating" class="form-select form-select-sm">
+                            <option value="">Any Rating</option>
+                            <option value="1" {% if filters.rating == "1" %}selected{% endif %}>1+</option>
+                            <option value="2" {% if filters.rating == "2" %}selected{% endif %}>2+</option>
+                            <option value="3" {% if filters.rating == "3" %}selected{% endif %}>3+</option>
+                            <option value="4" {% if filters.rating == "4" %}selected{% endif %}>4+</option>
+                            <option value="5" {% if filters.rating == "5" %}selected{% endif %}>5</option>
+                        </select>
+                    
+                    </div>
+                    </div>
               
                   <!-- Submit -->
                   <button class="btn btn-primary btn-sm" type="submit">Search</button>

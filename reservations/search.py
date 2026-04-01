@@ -37,7 +37,10 @@ def fetch_rooms() -> list:
 
         # Convert Decimal → float for JSON compatibility
         room = convert_decimals(room)
-
+        
+        if "wifi" in room:
+            room["wifi"] = "true" if room["wifi"] else "false"
+            
         # Attach presigned S3 image URL
         image_key = room.get("image_key")
         if image_key:

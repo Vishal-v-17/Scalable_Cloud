@@ -9,7 +9,6 @@ import logging
 from django.core.cache import cache
 from django.http import JsonResponse
 
-import requests
 from datetime import date
 
 #cognito
@@ -429,7 +428,7 @@ def room_search(request):
     filters = {
         key: val
         for key in ["keyword", "occupancy", "bed_size",
-                    "layout", "wifi", "min_price", "max_price"]
+                    "layout", "wifi", "min_price", "max_price", "rating"]
         if (val := request.GET.get(key, "").strip())
     }
 
@@ -470,60 +469,14 @@ def map_view(request):
     email = request.session.get("email")
     return render(request, "reservations/map.html", {"google_maps_api_key": settings.GOOGLE_MAPS_API_KEY, "email": email})
 
-# def run_glue_job(request):
-#     """Trigger the Glue job and redirect back to the report page."""
-#     if request.method == "POST":
-#         try:
-#             run_id = trigger_glue_job()
-#             messages.success(
-#                 request,
-#                 f"Glue job started successfully. Run ID: {run_id}. "
-#                 f"Refresh the page in ~2 minutes to see updated results."
-#             )
-#         except Exception as e:
-#             messages.error(request, f"Failed to start Glue job: {e}")
-#     return redirect("glue_report")
-
-# # reservations/views.py  (glue_report function only)
-
-# def glue_report(request):
-#     error      = None
-#     report     = {}
-#     overall    = {}
-#     job_status = None
-
-#     email = request.session.get("email")
-    
-#     # get job status — never crashes now
-#     try:
-#         job_status = get_latest_job_status()
-#     except Exception as e:
-#         job_status = {"state": "ERROR", "error": str(e),
-#                       "run_id": "", "started": "", "ended": ""}
-
-#     # fetch report — never crashes now
-#     try:
-#         report  = fetch_report_from_s3()
-#         overall = report.get("overall", {})
-#     except RuntimeError as e:
-#         error = str(e)
-#     except Exception as e:
-#         error = f"Unexpected error: {e}"
-
-#     return render(request, "reservations/report.html", {
-#         "overall":      overall,
-#         "has_bookings": report.get("has_bookings", False),
-#         "error":        error,
-#         "job_status":   job_status,
-#         "email": email
-#     })
-
 def glue_report(request):
     error      = None
     report     = {}
     overall    = {}
     job_status = None
-
+    
+    email   = request.session.get("email")
+    
     try:
         job_status = get_latest_job_status()
     except Exception as e:
@@ -547,6 +500,7 @@ def glue_report(request):
         "error":        error,
         "job_status":   job_status,
         "cooldown_active": bool(cache.get("glue_job_cooldown")),
+        "email":   email,
     })
 
 
