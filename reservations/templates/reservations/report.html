@@ -1,480 +1,487 @@
 {% load static %}
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Hotel Rooms | Welcome</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
-  </head>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hotel Analytics Report</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
   <style>
-
-    /* ── Layout ── */
-/* ── Layout ── */
-.report-page {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
-}
-
-/* ── Error banner ── */
-.report-page .error-banner {
-  background: #fff5f5;
-  border: 1px solid #fc8181;
-  color: #c53030;
-  border-radius: 8px;
-  padding: 1rem 1.25rem;
-  margin-bottom: 1.5rem;
-  font-size: 0.9rem;
-}
-
-/* ── Section title ── */
-.report-page .section-title {
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #718096;
-  margin: 2rem 0 1rem;
-}
-
-/* ── Stat cards ── */
-.report-page .stat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 1rem;
-}
-
-.report-page .stat-card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 1.25rem 1.5rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  border-top: 4px solid var(--accent, #4299e1);
-  transition: transform 0.15s, box-shadow 0.15s;
-}
-
-.report-page .stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-}
-
-.report-page .stat-card .label {
-  font-size: 0.78rem;
-  color: #718096;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.5rem;
-}
-
-.report-page .stat-card .value {
-  font-size: 1.9rem;
-  font-weight: 700;
-  color: #1a202c;
-  line-height: 1;
-}
-
-.report-page .stat-card .sub {
-  font-size: 0.75rem;
-  color: #a0aec0;
-  margin-top: 4px;
-}
-
-/* accent colours */
-.report-page .acc-blue   { --accent: #4299e1; }
-.report-page .acc-green  { --accent: #48bb78; }
-.report-page .acc-orange { --accent: #ed8936; }
-.report-page .acc-red    { --accent: #fc8181; }
-.report-page .acc-purple { --accent: #9f7aea; }
-.report-page .acc-teal   { --accent: #38b2ac; }
-
-/* ── Wi-Fi bar ── */
-.report-page .wifi-section {
-  background: #fff;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  margin-top: 1rem;
-}
-
-.report-page .wifi-section h3 {
-  font-size: 0.85rem;
-  color: #4a5568;
-  margin-bottom: 1rem;
-}
-
-.report-page .bar-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.report-page .bar-label {
-  font-size: 0.8rem;
-  color: #718096;
-  width: 100px;
-  flex-shrink: 0;
-}
-
-.report-page .bar-track {
-  flex: 1;
-  height: 14px;
-  background: #edf2f7;
-  border-radius: 99px;
-  overflow: hidden;
-}
-
-.report-page .bar-fill {
-  height: 100%;
-  border-radius: 99px;
-  transition: width 0.6s ease;
-}
-
-.report-page .bar-fill.wifi-yes { background: #48bb78; }
-.report-page .bar-fill.wifi-no  { background: #fc8181; }
-
-.report-page .bar-count {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #2d3748;
-  width: 24px;
-  text-align: right;
-}
-
-/* ── Bookings notice ── */
-.report-page .notice {
-  border-radius: 10px;
-  padding: 1rem 1.25rem;
-  font-size: 0.88rem;
-  margin-top: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.report-page .notice.green {
-  background: #f0fff4;
-  border: 1px solid #9ae6b4;
-  color: #276749;
-}
-
-.report-page .notice.gray {
-  background: #f7fafc;
-  border: 1px solid #e2e8f0;
-  color: #718096;
-}
-
-.report-page .notice-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.report-page .notice.green .notice-dot { background: #48bb78; }
-.report-page .notice.gray  .notice-dot { background: #cbd5e0; }
-
-/* ── Buttons (scoped so navbar is safe) ── */
-.report-page .btn {
-  display: inline-block;
-  padding: 0.65rem 1.4rem;
-  border-radius: 8px;
-  font-size: 0.88rem;
-  font-weight: 500;
-  text-decoration: none;
-  cursor: pointer;
-  border: none;
-}
-
-.report-page .btn-primary {
-  background: #2b6cb0;
-  color: #fff;
-}
-
-.report-page .btn-primary:hover {
-  background: #2c5282;
-}
-
-.report-page .btn-outline {
-  background: transparent;
-  border: 1px solid #cbd5e0;
-  color: #4a5568;
-}
-
-.report-page .btn-outline:hover {
-  background: #edf2f7;
-}
-
-/* ── Empty state ── */
-.report-page .empty {
-  text-align: center;
-  padding: 4rem 2rem;
-  color: #a0aec0;
-}
-
-.report-page .empty h2 {
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
-  color: #718096;
-}
-
-.report-page .empty p {
-  font-size: 0.85rem;
-}
+    .report-page{max-width:1100px;margin:0 auto;padding:2rem 1.5rem 4rem}
+    .error-banner{background:#fff5f5;border:1px solid #fc8181;color:#c53030;border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:.9rem}
+    .section-title{font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#718096;margin:2rem 0 1rem}
+    .stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:1rem}
+    .stat-card{background:#fff;border-radius:12px;padding:1.25rem 1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.08);border-top:4px solid var(--accent,#4299e1);transition:transform .15s,box-shadow .15s}
+    .stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.12)}
+    .stat-card .label{font-size:.78rem;color:#718096;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem}
+    .stat-card .value{font-size:1.9rem;font-weight:700;color:#1a202c;line-height:1}
+    .stat-card .sub{font-size:.75rem;color:#a0aec0;margin-top:4px}
+    .acc-blue{--accent:#4299e1}.acc-green{--accent:#48bb78}.acc-orange{--accent:#ed8936}
+    .acc-red{--accent:#fc8181}.acc-purple{--accent:#9f7aea}.acc-teal{--accent:#38b2ac}
+    .wifi-section{background:#fff;border-radius:12px;padding:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-top:1rem}
+    .wifi-section h3{font-size:.85rem;color:#4a5568;margin-bottom:1rem}
+    .bar-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+    .bar-label{font-size:.8rem;color:#718096;width:100px;flex-shrink:0}
+    .bar-track{flex:1;height:14px;background:#edf2f7;border-radius:99px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:99px;transition:width .6s ease}
+    .bar-fill.wifi-yes{background:#48bb78}.bar-fill.wifi-no{background:#fc8181}
+    .bar-count{font-size:.8rem;font-weight:600;color:#2d3748;width:24px;text-align:right}
+    .notice{border-radius:10px;padding:1rem 1.25rem;font-size:.88rem;margin-top:1rem;display:flex;align-items:center;gap:10px}
+    .notice.green{background:#f0fff4;border:1px solid #9ae6b4;color:#276749}
+    .notice.amber{background:#fffaf0;border:1px solid #fbd38d;color:#744210}
+    .notice.gray {background:#f7fafc;border:1px solid #e2e8f0;color:#718096}
+    .notice.red  {background:#fff5f5;border:1px solid #fc8181;color:#c53030}
+    .notice-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .notice.green .notice-dot{background:#48bb78}
+    .notice.amber .notice-dot{background:#f6ad55;animation:pulse 1.2s ease-in-out infinite}
+    .notice.gray  .notice-dot{background:#cbd5e0}
+    .notice.red   .notice-dot{background:#fc8181}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+    .actions{margin-top:2rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:center}
+    .rpt-btn{display:inline-block;padding:.65rem 1.4rem;border-radius:8px;font-size:.88rem;font-weight:500;text-decoration:none;cursor:pointer;border:none}
+    .rpt-btn-primary{background:#2b6cb0;color:#fff}
+    .rpt-btn-primary:hover{background:#2c5282;color:#fff}
+    .rpt-btn-primary:disabled{opacity:.6;cursor:not-allowed}
+    .rpt-btn-outline{background:transparent;border:1px solid #cbd5e0;color:#4a5568}
+    .rpt-btn-outline:hover{background:#edf2f7}
+    .empty{text-align:center;padding:4rem 2rem;color:#a0aec0}
+    .empty h2{font-size:1.1rem;margin-bottom:.5rem;color:#718096}
+    .live-badge{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;
+      background:#f0fff4;border:1px solid #9ae6b4;color:#276749;
+      border-radius:20px;padding:3px 10px;margin-left:10px;vertical-align:middle}
+    .live-dot{width:7px;height:7px;border-radius:50%;background:#48bb78;
+      animation:pulse 1.5s ease-in-out infinite}
   </style>
-    <body>
-      <!-- Navbar -->
-      <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-          <a class="navbar-brand fw-bold" href="{% url 'home' %}">🏨 MyHotel</a>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarText">
-            <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-              <li class="nav-item">
-                <a class="nav-link" aria-current="page" href="{% url 'home' %}">Home</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'list_room_types' %}">Rooms</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'amenities' %}">Amenities</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'create_room' %}">Add Room</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'map' %}">Map</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'glue_report' %}">Report</a>
-              </li>
-              <form class="d-flex align-items-center" method="GET" action="{% url 'room_search' %}">
-    
-                  <!-- Search Input -->
-                  <input
-                      class="form-control form-control-sm me-2"
-                      type="search"
-                      name="keyword"
-                      placeholder="Search description..."
-                      aria-label="Search"
-                      value="{{ request.GET.keyword }}"
-                  >
-              
-                  <!-- Dropdown Button -->
-                  <div class="dropdown me-2">
-                      <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
-                              type="button" 
-                              data-bs-toggle="dropdown" 
-                              aria-expanded="false">
-                          Filters
-                      </button>
-              
-                      <!-- DROPDOWN MENU -->
-                      <div class="dropdown-menu p-3 shadow" style="min-width: 250px;">
-              
-                          <!-- Occupancy -->
-                          <label class="form-label fw-bold mb-1">Occupancy</label>
-                          <select class="form-select form-select-sm mb-3" name="occupancy">
-                              <option value="">Any Occupancy</option>
-                              <option value="Single">Single</option>
-                              <option value="Double">Double</option>
-                              <option value="Triple">Triple</option>
-                              <option value="Quad">Quad</option>
-                          </select>
-              
-                          <!-- Bed Size -->
-                          <label class="form-label fw-bold mb-1">Bed Size</label>
-                          <select class="form-select form-select-sm mb-3" name="bed_size">
-                              <option value="">Any Bed Size</option>
-                              <option value="King">King</option>
-                              <option value="Queen">Queen</option>
-                              <option value="Twin">Twin</option>
-                          </select>
-              
-                          <!-- Layout -->
-                          <label class="form-label fw-bold mb-1">Layout</label>
-                          <select class="form-select form-select-sm mb-3" name="layout">
-                              <option value="">Any Layout</option>
-                              <option value="Standard">Standard</option>
-                              <option value="Deluxe">Deluxe</option>
-                              <option value="Suite">Suite</option>
-                          </select>
-              
-                          <!-- Wifi -->
-                          <label class="form-label fw-bold mb-1">Wifi</label>
-                          <select class="form-select form-select-sm mb-3" name="wifi">
-                              <option value="">Any</option>
-                              <option value="true">Available</option>
-                              <option value="false">Not Available</option>
-                          </select>
-              
-                          <!-- Min / Max Price -->
-                          <div class="row">
-                              <div class="col">
-                                  <label class="form-label fw-bold mb-1">Min Price</label>
-                                  <input type="number" name="min_price" 
-                                         class="form-control form-control-sm mb-3"
-                                         placeholder="0">
-                              </div>
-              
-                              <div class="col">
-                                  <label class="form-label fw-bold mb-1">Max Price</label>
-                                  <input type="number" name="max_price" 
-                                         class="form-control form-control-sm mb-3"
-                                         placeholder="500">
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-              
-                  <!-- Submit -->
-                  <button class="btn btn-primary btn-sm" type="submit">Search</button>
-              </form>
-            </ul>
-            <nav class="navbar">
-              {% if email %}
-                <li class="nav-item me-3 text-light d-flex align-items-center">
-                  Hello, <strong class="ms-1">{{ email }}</strong>
-                </li>
-                <li class="nav-item"><a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">Logout</a></li>
-              {% else %}
-                <li class="nav-item me-2"><a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">Login</a></li>
-              {% endif %}
-              </nav>
-          </div>
-        </div>
-      </nav>
+</head>
+<body>
 
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="{% url 'home' %}">🏨 MyHotel</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarText">
+      <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'list_room_types' %}">Rooms</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'amenities' %}">Amenities</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'create_room' %}">Add Room</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'map' %}">Map</a></li>
+        <li class="nav-item"><a class="nav-link active" href="{% url 'glue_report' %}">Report</a></li>
+        <form class="d-flex align-items-center" method="GET" action="{% url 'room_search' %}">
+          <input class="form-control form-control-sm me-2" type="search" name="keyword"
+                 placeholder="Search description..." value="{{ request.GET.keyword }}">
+          <div class="dropdown me-2">
+            <button class="btn btn-outline-secondary btn-sm dropdown-toggle"
+                    type="button" data-bs-toggle="dropdown">Filters</button>
+            <div class="dropdown-menu p-3 shadow" style="min-width:250px;">
+              <label class="form-label fw-bold mb-1">Occupancy</label>
+              <select class="form-select form-select-sm mb-3" name="occupancy">
+                <option value="">Any Occupancy</option>
+                <option value="Single">Single</option>
+                <option value="Double">Double</option>
+                <option value="Triple">Triple</option>
+                <option value="Quad">Quad</option>
+              </select>
+              <label class="form-label fw-bold mb-1">Bed Size</label>
+              <select class="form-select form-select-sm mb-3" name="bed_size">
+                <option value="">Any Bed Size</option>
+                <option value="King">King</option>
+                <option value="Queen">Queen</option>
+                <option value="Twin">Twin</option>
+              </select>
+              <label class="form-label fw-bold mb-1">Layout</label>
+              <select class="form-select form-select-sm mb-3" name="layout">
+                <option value="">Any Layout</option>
+                <option value="Standard">Standard</option>
+                <option value="Deluxe">Deluxe</option>
+                <option value="Suite">Suite</option>
+              </select>
+              <label class="form-label fw-bold mb-1">Wifi</label>
+              <select class="form-select form-select-sm mb-3" name="wifi">
+                <option value="">Any</option>
+                <option value="true">Available</option>
+                <option value="false">Not Available</option>
+              </select>
+              <div class="row">
+                <div class="col">
+                  <label class="form-label fw-bold mb-1">Min Price</label>
+                  <input type="number" name="min_price"
+                         class="form-control form-control-sm mb-3" placeholder="0">
+                </div>
+                <div class="col">
+                  <label class="form-label fw-bold mb-1">Max Price</label>
+                  <input type="number" name="max_price"
+                         class="form-control form-control-sm mb-3" placeholder="500">
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" type="submit">Search</button>
+        </form>
+      </ul>
+      <nav class="navbar">
+        {% if email %}
+          <li class="nav-item me-3 text-light d-flex align-items-center">
+            Hello, <strong class="ms-1">{{ email }}</strong>
+          </li>
+          <li class="nav-item">
+            <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">Logout</a>
+          </li>
+        {% else %}
+          <li class="nav-item me-2">
+            <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">Login</a>
+          </li>
+        {% endif %}
+      </nav>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Main content ── -->
 <main class="report-page">
 
-  {% if error %}
-  <div class="error-banner">
-    <strong>Could not load report:</strong> {{ error }}<br>
-    <small>Make sure the Glue job has run and the S3 report file exists.</small>
-  </div>
-  {% endif %}
-
-  {% if overall %}
-
-  <!-- ── Overall summary cards ── -->
-  <p class="section-title">Overall hotel summary</p>
-  <div class="stat-grid">
-
-    <div class="stat-card acc-blue">
-      <div class="label">Total rooms</div>
-      <div class="value">{{ overall.total_rooms|default:"—" }}</div>
-      <div class="sub">across all categories</div>
-    </div>
-
-    <div class="stat-card acc-green">
-      <div class="label">Avg. price / night</div>
-      <div class="value">
-        ${% if overall.avg_price %}{{ overall.avg_price }}{% else %}—{% endif %}
-      </div>
-      <div class="sub">mean across all rooms</div>
-    </div>
-
-    <div class="stat-card acc-teal">
-      <div class="label">Cheapest room</div>
-      <div class="value">
-        ${% if overall.cheapest_room %}{{ overall.cheapest_room }}{% else %}—{% endif %}
-      </div>
-      <div class="sub">lowest nightly rate</div>
-    </div>
-
-    <div class="stat-card acc-orange">
-      <div class="label">Most expensive</div>
-      <div class="value">
-        ${% if overall.most_expensive_room %}{{ overall.most_expensive_room }}{% else %}—{% endif %}
-      </div>
-      <div class="sub">premium room rate</div>
-    </div>
-
-    <div class="stat-card acc-purple">
-      <div class="label">Avg. rating</div>
-      <div class="value">
-        {% if overall.avg_rating %}{{ overall.avg_rating }}{% else %}—{% endif %}
-        <span style="font-size:1rem; color:#9f7aea;">★</span>
-      </div>
-      <div class="sub">guest satisfaction</div>
-    </div>
-
-    <div class="stat-card acc-red">
-      <div class="label">Top rating</div>
-      <div class="value">
-        {% if overall.top_rating %}{{ overall.top_rating }}{% else %}—{% endif %}
-        <span style="font-size:1rem; color:#fc8181;">★</span>
-      </div>
-      <div class="sub">highest-rated room</div>
-    </div>
-
+  <!-- Page heading -->
+  <div style="display:flex;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:.5rem;">
+    <h1 style="font-size:1.5rem;font-weight:600;color:#1a202c;margin:0;">
+      Hotel Analytics Report
+    </h1>
   </div>
 
-  <!-- ── Wi-Fi breakdown ── -->
-  <p class="section-title">Wi-Fi availability</p>
-  <div class="wifi-section">
-    <h3>Rooms with / without wi-fi</h3>
+  <!-- Dynamic status banner -->
+  <div id="job-banner" style="display:none;" class="notice amber">
+    <div class="notice-dot"></div>
+    <span id="banner-text"></span>
+  </div>
 
-    {% with total=overall.total_rooms wifi=overall.rooms_with_wifi no_wifi=overall.rooms_without_wifi %}
-    {% if total %}
-
-    <div class="bar-row">
-      <span class="bar-label">With wi-fi</span>
-      <div class="bar-track">
-        <div class="bar-fill wifi-yes"
-             style="width: {% widthratio wifi total 100 %}%">
-        </div>
-      </div>
-      <span class="bar-count">{{ wifi }}</span>
+  <!-- Last run status (server-rendered) -->
+  {% if job_status %}
+    {% if job_status.state == "SUCCEEDED" %}
+    <div class="notice green" id="static-status">
+      <div class="notice-dot"></div>
+      Last job: <strong>SUCCEEDED</strong>
+      {% if job_status.started %}&nbsp;— {{ job_status.started }}{% endif %}
     </div>
-
-    <div class="bar-row">
-      <span class="bar-label">Without wi-fi</span>
-      <div class="bar-track">
-        <div class="bar-fill wifi-no"
-             style="width: {% widthratio no_wifi total 100 %}%">
-        </div>
-      </div>
-      <span class="bar-count">{{ no_wifi }}</span>
+    {% elif job_status.state == "RUNNING" or job_status.state == "STARTING" %}
+    <div class="notice amber" id="static-status">
+      <div class="notice-dot"></div>
+      Glue job is currently <strong>{{ job_status.state }}</strong> — report will refresh automatically.
     </div>
-
+    {% elif job_status.state == "FAILED" %}
+    <div class="notice red" id="static-status">
+      <div class="notice-dot"></div>
+      Last job <strong>FAILED</strong>: {{ job_status.error }}
+    </div>
+    {% else %}
+    <div class="notice gray" id="static-status">
+      <div class="notice-dot"></div>
+      Last job: <strong>{{ job_status.state }}</strong>
+      {% if job_status.started %}&nbsp;— {{ job_status.started }}{% endif %}
+    </div>
     {% endif %}
-    {% endwith %}
-  </div>
+  {% endif %}
 
-  <!-- ── Bookings status ── -->
-  <p class="section-title">Bookings</p>
-  {% if has_bookings %}
-  <div class="notice green">
-    <div class="notice-dot"></div>
-    Active bookings are present in the system.
-  </div>
-  {% else %}
-  <div class="notice gray">
-    <div class="notice-dot"></div>
-    No bookings recorded in this report run.
+  <!-- Error banner -->
+  {% if error %}
+  <div class="error-banner" style="margin-top:1rem;">
+    <strong>Could not load report:</strong> {{ error }}<br>
+    <small>Run the Glue job to generate the report file.</small>
   </div>
   {% endif %}
 
-  {% else %}
-  <!-- Empty state — Glue job not yet run -->
-  <div class="empty">
-    <h2>No report data found</h2>
-    <p>Run the AWS Glue job to generate the hotel analytics report.</p>
+{% if overall %}
+
+<p class="section-title">Bookings summary</p>
+<div class="stat-grid">
+  <div class="stat-card acc-blue">
+    <div class="label">Total bookings</div>
+    <div class="value">{{ overall.total_bookings|default:"—" }}</div>
+    <div class="sub">all time</div>
   </div>
-  {% endif %}
+  <div class="stat-card acc-green">
+    <div class="label">Total revenue</div>
+    <div class="value">
+      ${% if overall.total_revenue %}{{ overall.total_revenue }}{% else %}—{% endif %}
+    </div>
+    <div class="sub">sum of all bookings</div>
+  </div>
+  <div class="stat-card acc-teal">
+    <div class="label">Avg. booking value</div>
+    <div class="value">
+      ${% if overall.avg_booking_value %}{{ overall.avg_booking_value }}{% else %}—{% endif %}
+    </div>
+    <div class="sub">per booking</div>
+  </div>
+  <div class="stat-card acc-purple">
+    <div class="label">Avg. stay</div>
+    <div class="value">
+      {% if overall.avg_stay_days %}{{ overall.avg_stay_days }}{% else %}—{% endif %}
+      <span style="font-size:1rem;color:#9f7aea;">days</span>
+    </div>
+    <div class="sub">average nights</div>
+  </div>
+  <div class="stat-card acc-orange">
+    <div class="label">Confirmed</div>
+    <div class="value">{{ overall.confirmed_bookings|default:"0" }}</div>
+    <div class="sub">confirmed bookings</div>
+  </div>
+  <div class="stat-card acc-red">
+    <div class="label">Cancelled</div>
+    <div class="value">{{ overall.cancelled_bookings|default:"0" }}</div>
+    <div class="sub">cancelled bookings</div>
+  </div>
+</div>
+
+<!-- By payment status -->
+{% if by_status %}
+<p class="section-title">Bookings by payment status</p>
+<div class="wifi-section">
+  {% for row in by_status %}
+  <div class="bar-row">
+    <span class="bar-label">{{ row.payment_status }}</span>
+    <div class="bar-track">
+      <div class="bar-fill wifi-yes"
+           style="width:{% widthratio row.count overall.total_bookings 100 %}%"></div>
+    </div>
+    <span class="bar-count">{{ row.count }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Top rooms -->
+{% if top_rooms %}
+<p class="section-title">Most booked rooms</p>
+<div class="wifi-section">
+  <table style="width:100%;border-collapse:collapse;font-size:.85rem;">
+    <thead>
+      <tr style="border-bottom:2px solid #e2e8f0;text-align:left;">
+        <th style="padding:.5rem .75rem;color:#718096;">Room ID</th>
+        <th style="padding:.5rem .75rem;color:#718096;">Bookings</th>
+        <th style="padding:.5rem .75rem;color:#718096;">Avg. stay</th>
+        <th style="padding:.5rem .75rem;color:#718096;">Total revenue</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for room in top_rooms %}
+      <tr style="border-bottom:1px solid #f0f0f0;">
+        <td style="padding:.5rem .75rem;font-weight:500;font-size:.78rem;">{{ room.roomId }}</td>
+        <td style="padding:.5rem .75rem;">{{ room.booking_count }}</td>
+        <td style="padding:.5rem .75rem;">{{ room.avg_stay_days }} days</td>
+        <td style="padding:.5rem .75rem;">${{ room.total_revenue }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- Recent bookings -->
+{% if recent %}
+<p class="section-title">Recent bookings</p>
+<div class="wifi-section">
+  <table style="width:100%;border-collapse:collapse;font-size:.85rem;">
+    <thead>
+      <tr style="border-bottom:2px solid #e2e8f0;text-align:left;">
+        <th style="padding:.5rem .75rem;color:#718096;">Booking ID</th>
+        <th style="padding:.5rem .75rem;color:#718096;">Room ID</th>
+        <th style="padding:.5rem .75rem;color:#718096;">Start date</th>
+        <th style="padding:.5rem .75rem;color:#718096;">End date</th>
+        <th style="padding:.5rem .75rem;color:#718096;">Days</th>
+        <th style="padding:.5rem .75rem;color:#718096;">Total</th>
+        <th style="padding:.5rem .75rem;color:#718096;">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in recent %}
+      <tr style="border-bottom:1px solid #f0f0f0;">
+        <td style="padding:.5rem .75rem;font-size:.75rem;color:#718096;">
+          {{ b.bookingId|slice:":8" }}...
+        </td>
+        <td style="padding:.5rem .75rem;font-size:.75rem;color:#718096;">
+          {{ b.roomId|slice:":8" }}...
+        </td>
+        <td style="padding:.5rem .75rem;">{{ b.start_date }}</td>
+        <td style="padding:.5rem .75rem;">{{ b.end_date }}</td>
+        <td style="padding:.5rem .75rem;">{{ b.number_of_days }}</td>
+        <td style="padding:.5rem .75rem;font-weight:500;">${{ b.total_price }}</td>
+        <td style="padding:.5rem .75rem;">
+          <span style="padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:500;
+            background:{% if b.payment_status == 'CONFIRMED' %}#f0fff4{% elif b.payment_status == 'CANCELLED' %}#fff5f5{% else %}#fffaf0{% endif %};
+            color:{% if b.payment_status == 'CONFIRMED' %}#276749{% elif b.payment_status == 'CANCELLED' %}#c53030{% else %}#744210{% endif %};
+            border:1px solid {% if b.payment_status == 'CONFIRMED' %}#9ae6b4{% elif b.payment_status == 'CANCELLED' %}#fc8181{% else %}#fbd38d{% endif %};">
+            {{ b.payment_status }}
+          </span>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty">
+  <h2>No report data found</h2>
+  <p>Click "Run Glue job" below to generate the hotel analytics report.</p>
+</div>
+{% endif %}
+
+  <!-- Actions -->
+  <div class="actions">
+    <button id="run-btn" onclick="runAndRefresh()" class="rpt-btn rpt-btn-primary">
+      Run Glue job &amp; refresh
+    </button>
+    <span style="font-size:.78rem;color:#a0aec0;margin-left:auto;">
+      Auto-refreshes when booking changes detected
+    </span>
+  </div>
 
 </main>
 
-      <!-- Footer -->
-      <footer class="bg-dark text-light text-center py-3">
-        <p class="mb-0">&copy; 2025 MyHotel. All Rights Reserved.</p>
-      </footer>
+<footer class="bg-dark text-light text-center py-3">
+  <p class="mb-0">&copy; 2025 MyHotel. All Rights Reserved.</p>
+</footer>
 
-      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    </body>
-  </html>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const CSRF       = "{{ csrf_token }}";
+const STATUS_URL = "{% url 'glue_job_status' %}";
+const RUN_URL    = "{% url 'run_glue_job' %}";
+
+// If page loaded with job already running, start polling immediately
+{% if job_status and job_status.state == "RUNNING" or job_status and job_status.state == "STARTING" %}
+window.addEventListener("DOMContentLoaded", () => {
+  hideStaticStatus();
+  setBanner("Glue job is already running — waiting for it to finish...", "amber");
+  pollUntilDone(30);
+});
+{% endif %}
+
+// Background poll every 30s — catches booking-triggered jobs automatically
+setInterval(backgroundPoll, 30000);
+
+function backgroundPoll() {
+  fetch(STATUS_URL)
+    .then(r => r.json())
+    .then(data => {
+      const state = data.state || "";
+      if (state === "RUNNING" || state === "STARTING") {
+        hideStaticStatus();
+        setBanner(
+          "Booking change detected — Glue job is running. " +
+          "Report will refresh automatically...", "amber"
+        );
+        pollUntilDone(30);
+      }
+    })
+    .catch(() => {});   // silent — background poll never shows errors
+}
+
+function setBanner(msg, type) {
+  const b = document.getElementById("job-banner");
+  const t = document.getElementById("banner-text");
+  const colours = {
+    amber: { bg:"#fffaf0", border:"1px solid #fbd38d", color:"#744210" },
+    green: { bg:"#f0fff4", border:"1px solid #9ae6b4", color:"#276749" },
+    red:   { bg:"#fff5f5", border:"1px solid #fc8181", color:"#c53030" },
+  };
+  const c = colours[type] || colours.amber;
+  b.style.display      = "block";
+  b.style.background   = c.bg;
+  b.style.border       = c.border;
+  b.style.color        = c.color;
+  b.style.borderRadius = "10px";
+  b.style.padding      = "1rem 1.25rem";
+  b.style.marginBottom = "1rem";
+  t.textContent = msg;
+}
+
+function hideBanner() {
+  document.getElementById("job-banner").style.display = "none";
+}
+
+function hideStaticStatus() {
+  const s = document.getElementById("static-status");
+  if (s) s.style.display = "none";
+}
+
+function setBtn(disabled, text) {
+  const btn = document.getElementById("run-btn");
+  btn.disabled      = disabled;
+  btn.textContent   = text;
+}
+
+function pollUntilDone(attempts) {
+  if (attempts <= 0) {
+    setBanner(
+      "Job is taking longer than expected. " +
+      "Click Reload page once it finishes in CloudWatch.", "red"
+    );
+    setBtn(false, "Run Glue job & refresh");
+    return;
+  }
+
+  fetch(STATUS_URL)
+    .then(r => r.json())
+    .then(data => {
+      const state = data.state || "UNKNOWN";
+      console.log("Glue poll:", state);
+
+      if (state === "SUCCEEDED") {
+        setBanner("Report updated! Loading fresh data...", "green");
+        setTimeout(() => window.location.reload(), 1500);
+
+      } else if (["FAILED","ERROR","TIMEOUT","STOPPED"].includes(state)) {
+        setBanner(
+          "Glue job failed: " + (data.error || state) +
+          ". Check AWS CloudWatch logs.", "red"
+        );
+        setBtn(false, "Run Glue job & refresh");
+
+      } else {
+        const elapsed = (30 - attempts) * 10;
+        setBanner(
+          "Glue job is " + state.toLowerCase() +
+          "... (" + elapsed + "s elapsed, usually 1–2 min)", "amber"
+        );
+        setTimeout(() => pollUntilDone(attempts - 1), 10000);
+      }
+    })
+    .catch(() => setTimeout(() => pollUntilDone(attempts - 1), 10000));
+}
+
+function runAndRefresh() {
+  setBtn(true, "Starting...");
+  hideStaticStatus();
+  setBanner("Sending request to AWS Glue...", "amber");
+
+  fetch(RUN_URL, {
+    method:  "POST",
+    headers: { "X-CSRFToken": CSRF, "Content-Type": "application/json" }
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      setBanner(
+        "Job started (ID: " + data.run_id + ") — waiting for results...",
+        "amber"
+      );
+      setBtn(true, "Job running...");
+      setTimeout(() => pollUntilDone(30), 5000);
+    } else {
+      setBanner("Could not start job: " + data.message, "red");
+      setBtn(false, "Run Glue job & refresh");
+    }
+  })
+  .catch(err => {
+    setBanner("Network error: " + err, "red");
+    setBtn(false, "Run Glue job & refresh");
+  });
+}
+</script>
+</body>
+</html>

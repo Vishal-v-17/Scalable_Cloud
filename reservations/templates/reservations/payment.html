@@ -128,30 +128,40 @@
         </div>
       </nav>
 
-    <div class="container mt-5">
-    
+<div class="container mt-5">
     <div class="card shadow mx-auto" style="max-width: 450px;">
         <div class="card-body">
-
             <h2 class="text-center mb-3">Payment</h2>
-
             <div class="text-center mb-4">
                 <p class="mb-1 fw-semibold">Booking ID:</p>
                 <h5 class="fw-bold">{{ booking_id }}</h5>
 
+                <!-- Seasonal Offer Banner -->
+                {% if offer_data %}
+                <div class="alert alert-success mt-3">
+                    🎉 <strong>{{ offer_data.offer_name }}</strong> offer applied!
+                </div>
+                <p class="mb-1 fw-semibold mt-2">Original Price:</p>
+                <h5 class="text-muted text-decoration-line-through">${{ offer_data.original_price }}</h5>
+                <p class="mb-1 fw-semibold">
+                    Discount 
+                    <span class="badge bg-danger">
+                        {{ offer_data.discount_rate|floatformat:0 }}% OFF
+                    </span>
+                </p>
+                <h6 class="text-danger">- ${{ offer_data.discount_amount }}</h6>
+                {% endif %}
+
                 <p class="mb-1 fw-semibold mt-3">Total Amount:</p>
                 <h4 class="text-success fw-bold">${{ total_price }}</h4>
             </div>
-
             <form method="POST">
                 {% csrf_token %}
                 <input type="hidden" name="msg" value="success">
-
                 <button type="submit" class="btn btn-dark w-100 py-2">
                     Pay Now
                 </button>
             </form>
-
         </div>
     </div>
 </div>

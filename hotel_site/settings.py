@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'reservations',
+    'reservations.apps.ReservationsConfig',
 ]
 
 MIDDLEWARE = [
@@ -164,4 +164,10 @@ ROOM_SEARCH_API_URL = "https://abc123.execute-api.us-east-1.amazonaws.com/search
 
 GOOGLE_MAPS_API_KEY = "AIzaSyDSo9AZrzdzSgHYAaONUMLLRNWjkqATVR0"
 
-GLUE_JOB_NAME = "my-glue-job"
+GLUE_JOB_NAME = "hotel_report_job"
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}

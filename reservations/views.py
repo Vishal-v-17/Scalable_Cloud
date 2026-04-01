@@ -3,12 +3,14 @@ from django.contrib import messages
 from .forms import BookingForm, RoomForm
 from .models import Room, Booking, Payment, RoomStatus, RoomType
 from .decorators import cognito_email_allowed, unauthenticated_user
-from .service import search_rooms
-from .spark_report import (
-    trigger_glue_job,
-    fetch_report_from_s3,
-    get_latest_job_status,
-)
+from .search import fetch_rooms
+from .spark_report import (trigger_glue_job,fetch_report_from_s3,get_latest_job_status,)
+import logging
+from django.core.cache import cache
+from django.http import JsonResponse
+
+import requests
+from datetime import date
 
 #cognito
 import hmac
@@ -44,6 +46,14 @@ def get_dynamodb():
 def get_s3():
     """Always creates fresh boto3 client — handles AWS Academy session restarts."""
     return boto3.client("s3", region_name=settings.AWS_REGION)
+
+def lambda_client():
+    """Always returns a fresh Lambda client."""
+    return boto3.client("lambda", region_name=settings.AWS_REGION)
+
+def get_table(table_name: str):
+    """Always returns a fresh DynamoDB table."""
+    return get_dynamodb().Table(table_name)
 
 def home(request):
     email = request.session.get("email")
@@ -224,10 +234,9 @@ def create_room(request):
 def list_rooms(request):
     email = request.session.get("email")
     
-    dynamodb       = get_dynamodb()
-    s3             = get_s3()
-    table          = dynamodb.Table(settings.AWS_DYNAMODB_TABLE)
-    bookings_table = dynamodb.Table(settings.AWS_DYNAMODB_TABLE_1)
+    table          = get_table(settings.AWS_DYNAMODB_TABLE)
+    bookings_table = get_table(settings.AWS_DYNAMODB_TABLE_1)
+    s3      = get_s3()
     
     response = table.scan()  
     rooms = response.get("Items", [])
@@ -263,16 +272,60 @@ def list_rooms(request):
             room["payment_status"] = "AVAILABLE"
 
     return render(request, "reservations/list_room_types.html", {"rooms": rooms, "email": email})
+
+OFFERS_API_URL = "https://yjb1bzfi1i.execute-api.us-east-1.amazonaws.com/offers"
+
+def get_seasonal_offer(start_date):
+    try:
+        response = requests.get(OFFERS_API_URL, timeout=5)
+        response.raise_for_status()
+        offers = response.json().get("available_offers", {})
+    except Exception:
+        return None, 0
+
+    season_map = {
+        1:  ["New Year", "Pongal"],
+        2:  ["Valentine's Day"],
+        3:  ["Women's Day", "Easter"],
+        4:  ["Easter", "Summer Sale"],
+        5:  ["Summer Sale"],
+        6:  ["Summer Sale"],
+        10: ["Halloween", "Diwali"],
+        11: ["Diwali", "Black Friday"],
+        12: ["Cyber Monday", "Christmas"],
+    }
+
+    best_offer, best_discount = None, 0
+    for offer_name in season_map.get(start_date.month, []):
+        discount = offers.get(offer_name, 0)
+        if discount > best_discount:
+            best_discount = discount
+            best_offer = offer_name
+
+    return best_offer, best_discount
     
 lambda_client = boto3.client("lambda", region_name=settings.AWS_REGION)
 
 @unauthenticated_user
 def book_room(request, room_id):
     email = request.session.get("email")
+    
+    # Fetch offers to show hint on the booking page
+    import json as _json
+    try:
+        api_resp = requests.get(OFFERS_API_URL, timeout=5)
+        offers = api_resp.json().get("available_offers", {})
+    except Exception:
+        offers = {}
+        
     if request.method == "POST":
-
         start_date = request.POST["start_date"]
         end_date = request.POST["end_date"]
+
+        # --- Fetch seasonal offer ---
+        offer_name, discount_rate = get_seasonal_offer(
+            date.fromisoformat(start_date)
+        )
 
         payload = {
             "roomId": room_id,
@@ -286,19 +339,37 @@ def book_room(request, room_id):
             InvocationType="RequestResponse",
             Payload=json.dumps(payload),
         )
-
         raw = response["Payload"].read()
         outer = json.loads(raw)
-
         inner = json.loads(outer["body"])
-
         booking_id = inner.get("bookingId")
         total_price = inner.get("total_price")
         number_of_days = inner.get("number_of_days")
-        
+
         if not booking_id:
             return HttpResponse("Booking failed: " + str(inner))
 
+        # --- Apply discount to total_price ---
+        if discount_rate and total_price:
+            original_price = float(total_price)
+            discount_amount = round(original_price * discount_rate, 2)
+            discounted_price = round(original_price - discount_amount, 2)
+
+            # Store offer details in session for confirmation page
+            request.session["offer_data"] = {
+                "offer_name":      offer_name,
+                "discount_rate":   discount_rate,
+                "original_price":  original_price,
+                "discount_amount": discount_amount,
+                "final_price":     discounted_price,
+            }
+
+            # With this — removes unnecessary .0 for whole numbers
+            final = int(discounted_price) if discounted_price == int(discounted_price) else discounted_price
+            return redirect(f"/payment/{booking_id}/{final}")
+
+        # No offer available, proceed with original price
+        request.session.pop("offer_data", None)
         return redirect(f"/payment/{booking_id}/{total_price}")
 
     return render(request, "reservations/book_room.html", {"room_id": room_id, "email": email})
@@ -308,6 +379,7 @@ SNS_TOPIC_ARN = settings.SNS_TOPIC_ARN
 @unauthenticated_user
 def payment(request, booking_id, total_price):
     email = request.session.get("email")
+    offer_data = request.session.get("offer_data", None)
     if request.method == "POST":
         payload = {"bookingId": booking_id}
 
@@ -337,7 +409,7 @@ def payment(request, booking_id, total_price):
 
         return render(request, "reservations/payment_success.html", {"booking_id": booking_id, "total_price": total_price, "status": status})
 
-    return render(request, "reservations/payment.html", {"booking_id": booking_id, "total_price": total_price, "email": email})
+    return render(request, "reservations/payment.html", {"booking_id": booking_id, "total_price": total_price,"offer_data": offer_data, "email": email})
 
 
 @unauthenticated_user
@@ -345,76 +417,106 @@ def payment_success(request):
     email = request.session.get("email")
     return render(request, "payment_success.html", {"email": email})
 
+LAMBDA_SEARCH_URL = "https://07wn5poyr7.execute-api.us-east-1.amazonaws.com/search"
 
-
-# ROOM_SEARCH_API = "http://127.0.0.1:8080"
-
-# def room_search(request):
-#     email = request.session.get("email")
-
-#     # Build filters from GET params (same as before)
-#     filters = {
-#         key: request.GET.get(key, "").strip()
-#         for key in ["occupancy", "bed_size", "layout", "wifi",
-#                     "min_price", "max_price", "rating", "keyword"]
-#     }
-
-#     # Call the API — no aws_config needed (uses .env), request image URLs
-#     response = requests.post(
-#         f"{ROOM_SEARCH_API}/rooms/search",
-#         json={
-#             "generate_image_urls": True,    # ← tells API to attach S3 URLs
-#             "filters": filters,
-#         }
-#     )
-#     response.raise_for_status()
-#     data    = response.json()
-#     results = data["results"]               # already has image_url attached
-            
-#     return render(request, "reservations/room_search.html", {"results": results, "filters": filters, "email": email})
-
-# ── Views ─────────────────────────────────────────────────────────────────────
 def room_search(request):
-    email = request.session.get("email")
+    email   = request.session.get("email")
+    results = None
+    count   = 0
+    error   = None
 
+    # ── Read filters from GET params ───────────────────────────────────────
     filters = {
-        "occupancy":  request.GET.get("occupancy"),
-        "bed_size":   request.GET.get("bed_size"),
-        "wifi":       request.GET.get("wifi"),
-        "min_price":  request.GET.get("min_price"),
-        "max_price":  request.GET.get("max_price"),
-        "layout":     request.GET.get("layout"),
-        "rating":     request.GET.get("rating"),
-        "keyword":    request.GET.get("keyword"),
+        key: val
+        for key in ["keyword", "occupancy", "bed_size",
+                    "layout", "wifi", "min_price", "max_price"]
+        if (val := request.GET.get(key, "").strip())
     }
 
-    results = search_rooms(filters)
+    if request.GET:
+        try:
+            # Step 1 — Fetch rooms from DynamoDB + S3 image URLs
+            rooms = fetch_rooms()
+
+            # Step 2 — Send data + filters to Lambda search API
+            response = requests.post(
+                LAMBDA_SEARCH_URL,
+                json={
+                    "data":    rooms,    # full room list with image_url attached
+                    "filters": filters,
+                },
+                timeout=10
+            )
+            response.raise_for_status()
+            data    = response.json()
+            results = data["results"]   # already has image_url in each room
+            count   = data["count"]
+
+        except requests.exceptions.RequestException as e:
+            error = f"Search API error: {str(e)}"
+        except Exception as e:
+            error = f"Error: {str(e)}"
 
     return render(request, "reservations/room_search.html", {
         "results": results,
         "filters": filters,
+        "count":   count,
         "email":   email,
+        "error":   error,
     })
+
     
 def map_view(request):
     email = request.session.get("email")
     return render(request, "reservations/map.html", {"google_maps_api_key": settings.GOOGLE_MAPS_API_KEY, "email": email})
 
-def run_glue_job(request):
-    """Trigger the Glue job and redirect back to the report page."""
-    if request.method == "POST":
-        try:
-            run_id = trigger_glue_job()
-            messages.success(
-                request,
-                f"Glue job started successfully. Run ID: {run_id}. "
-                f"Refresh the page in ~2 minutes to see updated results."
-            )
-        except Exception as e:
-            messages.error(request, f"Failed to start Glue job: {e}")
-    return redirect("glue_report")
+# def run_glue_job(request):
+#     """Trigger the Glue job and redirect back to the report page."""
+#     if request.method == "POST":
+#         try:
+#             run_id = trigger_glue_job()
+#             messages.success(
+#                 request,
+#                 f"Glue job started successfully. Run ID: {run_id}. "
+#                 f"Refresh the page in ~2 minutes to see updated results."
+#             )
+#         except Exception as e:
+#             messages.error(request, f"Failed to start Glue job: {e}")
+#     return redirect("glue_report")
 
-# reservations/views.py  (glue_report function only)
+# # reservations/views.py  (glue_report function only)
+
+# def glue_report(request):
+#     error      = None
+#     report     = {}
+#     overall    = {}
+#     job_status = None
+
+#     email = request.session.get("email")
+    
+#     # get job status — never crashes now
+#     try:
+#         job_status = get_latest_job_status()
+#     except Exception as e:
+#         job_status = {"state": "ERROR", "error": str(e),
+#                       "run_id": "", "started": "", "ended": ""}
+
+#     # fetch report — never crashes now
+#     try:
+#         report  = fetch_report_from_s3()
+#         overall = report.get("overall", {})
+#     except RuntimeError as e:
+#         error = str(e)
+#     except Exception as e:
+#         error = f"Unexpected error: {e}"
+
+#     return render(request, "reservations/report.html", {
+#         "overall":      overall,
+#         "has_bookings": report.get("has_bookings", False),
+#         "error":        error,
+#         "job_status":   job_status,
+#         "email": email
+#     })
 
 def glue_report(request):
     error      = None
@@ -422,16 +524,12 @@ def glue_report(request):
     overall    = {}
     job_status = None
 
-    email = request.session.get("email")
-    
-    # get job status — never crashes now
     try:
         job_status = get_latest_job_status()
     except Exception as e:
         job_status = {"state": "ERROR", "error": str(e),
                       "run_id": "", "started": "", "ended": ""}
 
-    # fetch report — never crashes now
     try:
         report  = fetch_report_from_s3()
         overall = report.get("overall", {})
@@ -442,8 +540,40 @@ def glue_report(request):
 
     return render(request, "reservations/report.html", {
         "overall":      overall,
+        "by_status":    report.get("by_status",  []),
+        "top_rooms":    report.get("top_rooms",  []),
+        "recent":       report.get("recent",     []),
         "has_bookings": report.get("has_bookings", False),
         "error":        error,
         "job_status":   job_status,
-        "email": email
+        "cooldown_active": bool(cache.get("glue_job_cooldown")),
     })
+
+
+def run_glue_job(request):
+    """Manually trigger the Glue job — returns JSON."""
+    if request.method == "POST":
+        try:
+            run_id = trigger_glue_job()
+            cache.set("glue_job_cooldown", True, 120)
+            return JsonResponse({
+                "success": True,
+                "run_id":  run_id,
+                "message": "Glue job started."
+            })
+        except Exception as e:
+            return JsonResponse({"success": False, "message": str(e)}, status=500)
+    return JsonResponse({"success": False, "message": "POST required"}, status=405)
+
+
+def glue_job_status(request):
+    """Return current Glue job status as JSON — polled by frontend."""
+    try:
+        status = get_latest_job_status()
+        if status is None:
+            return JsonResponse({"state": "NEVER_RUN", "error": ""})
+        # Also tell frontend if a booking-triggered job is pending
+        status["cooldown_active"] = bool(cache.get("glue_job_cooldown"))
+        return JsonResponse(status)
+    except Exception as e:
+        return JsonResponse({"state": "ERROR", "error": str(e)}, status=500)

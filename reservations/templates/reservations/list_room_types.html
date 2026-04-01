@@ -162,13 +162,12 @@
                   <li><strong>Occupancy:</strong> {{ room_type.occupancy }}</li>
                   <li><strong>Bed Size:</strong> {{ room_type.bed_size }}</li>
                   <li><strong>Wi-Fi:</strong> {% if room_type.wifi %}✅ Yes{% else %}❌ No{% endif %}</li>
-                  <li><strong>Price:</strong> ${{ room_type.price }}</li>
+                  <li><strong>Price:</strong> ${{ room_type.price }}/day</li>
                   <li><strong>Rating:</strong> ⭐ {{ room_type.rating }}</li>
-                  {% if room_type.payment_status == "PAID" %}
+                  {% if room_type.payment_status == "CONFIRMED" %}
                       <span class="badge bg-danger fs-6">Booked</span>
                   {% elif room_type.payment_status == "PENDING" %}
                       <span class="badge bg-warning text-dark fs-6">Awaiting Payment</span>
-                  
                   {% else %}
                       <a class="badge bg-primary text-decoration-none fs-6" href="{% url 'book_room' room_type.roomId %}">Book Now</a>
                   {% endif %}

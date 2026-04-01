@@ -188,10 +188,50 @@
 
             <label>End Date</label>
             <input type="date" name="end_date" required>
+            
+            <!-- Offer hint shown dynamically based on month picked -->
+        <div id="offer-hint" class="alert alert-info mt-2" style="display:none;">
+            🏷️ <span id="offer-text"></span>
+        </div>
 
             <button type="submit">Calculate Price & Continue</button>
         </form>
     </div>
-    
+
 </body>
+<script>
+const offers = {{ offers_json|safe }};  {# passed from view #}
+
+document.getElementById("start_date").addEventListener("change", function () {
+    const month = new Date(this.value).getMonth() + 1;
+    const seasonMap = {
+        1:  ["New Year", "Pongal"],
+        2:  ["Valentine's Day"],
+        3:  ["Women's Day", "Easter"],
+        4:  ["Easter", "Summer Sale"],
+        5:  ["Summer Sale"],
+        6:  ["Summer Sale"],
+        10: ["Halloween", "Diwali"],
+        11: ["Diwali", "Black Friday"],
+        12: ["Cyber Monday", "Christmas"],
+    };
+    const candidates = seasonMap[month] || [];
+    let bestOffer = null, bestDiscount = 0;
+    candidates.forEach(name => {
+        if (offers[name] && offers[name] > bestDiscount) {
+            bestDiscount = offers[name];
+            bestOffer = name;
+        }
+    });
+
+    const hint = document.getElementById("offer-hint");
+    if (bestOffer) {
+        document.getElementById("offer-text").textContent =
+            `${bestOffer} offer available — ${(bestDiscount * 100).toFixed(0)}% off your booking!`;
+        hint.style.display = "block";
+    } else {
+        hint.style.display = "none";
+    }
+});
+</script>
 </html>

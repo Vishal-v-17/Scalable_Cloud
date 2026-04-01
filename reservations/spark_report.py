@@ -4,6 +4,7 @@ import boto3
 import json
 import logging
 from botocore.exceptions import ClientError, NoCredentialsError
+from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +13,11 @@ GLUE_JOB_NAME = "hotel_report_job"
 S3_BUCKET     = "aws-glue-assets-992382373831-us-east-1"
 S3_KEY        = "reports/hotel_report.json"
 
+COOLDOWN_KEY     = "glue_job_cooldown"
+COOLDOWN_SECONDS = 120   # prevent duplicate jobs within 2 minutes
+
+
+# ── Glue job controls ──────────────────────────────────────────────
 
 def trigger_glue_job():
     client = boto3.client("glue", region_name=AWS_REGION)
@@ -88,9 +94,7 @@ def fetch_report_from_s3():
     except ClientError as e:
         code = e.response["Error"]["Code"]
         if code == "NoSuchKey":
-            raise RuntimeError(
-                "Report not found in S3. Run the Glue job first."
-            )
+            raise RuntimeError("Report not found in S3. Run the Glue job first.")
         if code in ("ExpiredTokenException", "InvalidClientTokenId"):
             raise RuntimeError(
                 "AWS session token expired. Refresh your credentials in AWS Academy."
@@ -100,3 +104,28 @@ def fetch_report_from_s3():
         raise RuntimeError(
             "No AWS credentials found. Run 'aws configure' in Cloud9."
         )
+
+
+# ── Auto-trigger signal handler ────────────────────────────────────
+
+def handle_booking_change(sender, instance, **kwargs):
+    """
+    Called by Django signals whenever a Booking is
+    created, updated, or deleted.
+    Triggers the Glue job with a 2-minute cooldown
+    so rapid saves don't spawn duplicate jobs.
+    """
+    if cache.get(COOLDOWN_KEY):
+        logger.info("Glue trigger skipped — cooldown active")
+        return
+
+    try:
+        run_id = trigger_glue_job()
+        cache.set(COOLDOWN_KEY, True, COOLDOWN_SECONDS)
+        logger.info(
+            f"Glue job auto-triggered on Booking "
+            f"{sender.__name__} change. Run ID: {run_id}"
+        )
+    except Exception as e:
+        # Never let a Glue failure break the booking save
+        logger.error(f"Glue auto-trigger failed: {e}")

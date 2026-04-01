@@ -10,10 +10,12 @@ urlpatterns = [
     path('rooms/list', views.list_rooms, name='list_room_types'),
     path('rooms/create', views.create_room, name='create_room'),
     path("book/<str:room_id>/", views.book_room, name="book_room"),
-    path("payment/<str:booking_id>/<int:total_price>/", views.payment, name="payment"),
+    path("payment/<str:booking_id>/<str:total_price>/", views.payment, name="payment"),
     path("payment/success/", views.payment_success, name="payment_success"),
     path("rooms/search/", views.room_search, name="room_search"),
     path('amenities/', views.amenities_page, name='amenities'),
     path("map/", views.map_view, name="map"),
     path("report/", views.glue_report, name="glue_report"),
+    path("report/run/",    views.run_glue_job,   name="run_glue_job"),
+    path("report/status/", views.glue_job_status, name="glue_job_status"),
 ]
